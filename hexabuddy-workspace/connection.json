@@ -1,0 +1,4 @@
+{
+  "server": "https://101.126.23.231:8443",
+  "caCertificate": "certificates/server.pem"
+}

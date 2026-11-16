@@ -1,0 +1,16 @@
+{
+  "name": "hexabuddy-plugin",
+  "owner": {
+    "name": "hexabuddy"
+  },
+  "metadata": {
+    "description": "The Hexabuddy plugin: your Claude Code and Codex sessions on your phone."
+  },
+  "plugins": [
+    {
+      "name": "hexabuddy-workspace",
+      "source": "./hexabuddy-workspace",
+      "description": "Watch and approve Claude Code and Codex sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy."
+    }
+  ]
+}

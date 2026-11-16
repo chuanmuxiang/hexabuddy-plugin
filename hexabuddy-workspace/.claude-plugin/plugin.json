@@ -1,0 +1,18 @@
+{
+  "name": "hexabuddy-workspace",
+  "version": "0.1.0",
+  "description": "Watch and approve Claude Code and Codex sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy.",
+  "author": {
+    "name": "hexabuddy"
+  },
+  "homepage": "https://github.com/chuanmuxiang/hexabuddy-plugin",
+  "repository": "https://github.com/chuanmuxiang/hexabuddy-plugin",
+  "license": "MIT",
+  "keywords": [
+    "hexabuddy",
+    "approvals",
+    "phone",
+    "sessions",
+    "mcp"
+  ]
+}
