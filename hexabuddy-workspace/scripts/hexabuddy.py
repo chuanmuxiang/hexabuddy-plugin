@@ -181,9 +181,18 @@ def run(command, env=None, *, check=True):
     return output if code == 0 else ''
 
 
+def interactive_command(command):
+    # `/hexabuddy-workspace:connect` runs this script through the agent's shell tool, which has no terminal, and
+    # `claude mcp login` refuses to sign in without one ("stdin isn't a terminal"). Give such commands a
+    # pseudo-terminal with macOS `script`; the sign-in itself needs no typing (this Mac's key approves it).
+    if sys.stdin.isatty() or not shutil.which('script'):
+        return command
+    return ['script', '-q', '/dev/null', *command]
+
+
 def run_interactive(command, env=None):
     # A command the person sees: native sign-in pages and macOS trust prompts.
-    if subprocess.run(command, env=env, timeout=900).returncode:
+    if subprocess.run(interactive_command(command), env=env, timeout=900).returncode:
         raise SetupError(f'{command[0]} {command[1]} did not finish. Run connect again.')
 
 

@@ -405,3 +405,24 @@ class PairingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class InteractiveCommandTest(unittest.TestCase):
+    # /hexabuddy-workspace:connect runs without a terminal; `claude mcp login` needs one (2026-11-16 live failure).
+    def test_no_terminal_gets_a_pseudo_terminal(self):
+        with patch.object(setup.sys.stdin, 'isatty', return_value=False), \
+                patch.object(setup.shutil, 'which', return_value='/usr/bin/script'):
+            self.assertEqual(setup.interactive_command(['claude', 'mcp', 'login', 'hexabuddy-buddy']),
+                             ['script', '-q', '/dev/null', 'claude', 'mcp', 'login', 'hexabuddy-buddy'])
+
+    def test_terminal_runs_the_command_directly(self):
+        with patch.object(setup.sys.stdin, 'isatty', return_value=True):
+            self.assertEqual(setup.interactive_command(['claude', 'mcp', 'login', 'x']), ['claude', 'mcp', 'login', 'x'])
+
+    def test_failure_still_reported(self):
+        with patch.object(setup.sys.stdin, 'isatty', return_value=False), \
+                patch.object(setup.subprocess, 'run', return_value=type('R', (), {'returncode': 1})()) as run:
+            with self.assertRaises(setup.SetupError):
+                setup.run_interactive(['claude', 'mcp', 'login', 'hexabuddy-buddy'])
+            self.assertEqual(run.call_args[0][0][:3], ['script', '-q', '/dev/null'])
+
