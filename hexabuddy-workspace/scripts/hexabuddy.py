@@ -386,16 +386,46 @@ def install_ca(ca_cert):
     return str(home_ca())
 
 
+def server_certificate(server):
+    # PEM of the certificate the server presents; fetch only, `security verify-cert` does the verification.
+    url = urlsplit(server)
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    with socket.create_connection((url.hostname, url.port or 443), timeout=10) as raw, \
+         context.wrap_socket(raw, server_hostname=url.hostname) as tls:
+        return ssl.DER_cert_to_PEM_cert(tls.getpeercert(binary_form=True))
+
+
+def server_trusted(server):
+    # Whether macOS already trusts the server's certificate for SSL to its host (the check a client makes).
+    host = urlsplit(server).hostname
+    try:
+        leaf = server_certificate(server)
+    except (OSError, ValueError):
+        return False
+    with tempfile.NamedTemporaryFile('w', suffix='.pem') as file:
+        file.write(leaf)
+        file.flush()
+        code, _ = execute(['security', 'verify-cert', '-c', file.name, '-p', 'ssl', '-s', host])
+    return code == 0
+
+
 def trust_server_ca(ca_cert, state):
-    # Login Keychain trusts the CA for SSL (both clients); Claude Code also gets NODE_EXTRA_CA_CERTS. Recorded in state trust.
+    # Login Keychain trusts the CA for SSL to the server host only (both clients); Claude Code also gets
+    # NODE_EXTRA_CA_CERTS. Recorded in state trust.
     if not ca_cert:
         return
     trust = dict(state.get('trust') or {})
-    code, _ = execute(['security', 'verify-cert', '-c', ca_cert, '-p', 'ssl'])
-    if code:
-        print('macOS asks once to trust the Hexabuddy server certificate.', flush=True)
-        run_interactive(['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-k', str(login_keychain()), ca_cert])
-        trust['keychain'] = certificate_sha1(ca_cert)
+    host = urlsplit(state['server']).hostname
+    if trust.get('keychain') and not trust.get('host'):
+        # An earlier connect trusted the CA for SSL to every host: replace it with the host-scoped setting.
+        run(['security', 'delete-certificate', '-t', '-Z', trust.pop('keychain'), str(login_keychain())], check=False)
+    if urlsplit(state['server']).scheme == 'https' and not server_trusted(state['server']):
+        print(f'macOS asks once to trust the Hexabuddy server certificate for {host}.', flush=True)
+        run_interactive(['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-s', host,
+                         '-k', str(login_keychain()), ca_cert])
+        trust.update(keychain=certificate_sha1(ca_cert), host=host)
     path = claude_settings_path()
     claude = read_settings(path)
     env = dict(claude.get('env') or {})
@@ -410,11 +440,11 @@ def trust_server_ca(ca_cert, state):
 
 
 def remove_ca_trust(state):
-    # Undo only the trust that connect added.
+    # Undo only the trust that connect added: the CA certificate and its trust settings (host-scoped or older global).
     trust = state.get('trust') or {}
     if trust.get('keychain'):
         run(['security', 'delete-certificate', '-t', '-Z', trust['keychain'], str(login_keychain())], check=False)
-        print('✓ Server certificate trust removed from the login Keychain.')
+        print(f"✓ Server certificate trust{' for ' + trust['host'] if trust.get('host') else ''} removed from the login Keychain.")
     path = claude_settings_path()
     claude = read_settings(path)
     env = dict(claude.get('env') or {})

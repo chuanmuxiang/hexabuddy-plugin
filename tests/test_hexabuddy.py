@@ -5,12 +5,17 @@ import json
 import os
 import shlex
 import tempfile
-import tomllib
 import unittest
 from contextlib import contextmanager, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import URLError
+from urllib.parse import urlsplit
+
+try:
+    import tomllib  # Python 3.11+; the config.toml assertions are skipped on 3.9
+except ModuleNotFoundError:
+    tomllib = None
 
 spec = importlib.util.spec_from_file_location('buddy_setup', Path(__file__).parents[1] / 'hexabuddy-workspace/scripts/hexabuddy.py')
 setup = importlib.util.module_from_spec(spec)
@@ -19,6 +24,7 @@ spec.loader.exec_module(setup)
 KEY = 'hb_desktop_' + 'f' * 64
 DESKTOP_ID = 'a' * 32
 SERVER = json.loads((setup.PLUGIN / 'connection.json').read_text())['server']
+HOST = urlsplit(SERVER).hostname
 BUNDLED_CA = setup.PLUGIN / 'certificates/server.pem'
 OTHER_HOOK = {'type': 'command', 'command': 'echo other-tool'}
 
@@ -35,11 +41,15 @@ class FakeMac:
         self.codex_mcp = None
         self.signed_in = set()
         self.plugin = False
-        self.trusted = False
+        self.trusted_host = None  # host the CA is trusted for; '*' = every host (before host scoping)
         self.codex_app = False
         self.revoke_reply = {'ok': True, 'revoked': 2, 'scopes': ['desktop', 'mcp']}
         self.approving = False
         self.pairings = 0
+
+    @property
+    def trusted(self):
+        return self.trusted_host is not None
 
     def execute(self, command, env=None):
         self.commands.append(command)
@@ -71,9 +81,9 @@ class FakeMac:
         if command[:3] == ['claude', 'plugin', 'uninstall']:
             self.plugin = False
         if command[:2] == ['security', 'verify-cert']:
-            return (0 if self.trusted else 1), ''
+            return (0 if self.trusted_host in ('*', command[command.index('-s') + 1]) else 1), ''
         if command[:2] == ['security', 'delete-certificate']:
-            self.trusted = False
+            self.trusted_host = None
         if command[0] == 'bash' and command[1].endswith('translate-to-buddy/install.sh'):
             (self.home / 'Library/Services/Translate to Buddy.workflow').mkdir(parents=True, exist_ok=True)
         if command[0] == 'bash' and command[1].endswith('translate-to-buddy/uninstall.sh'):
@@ -91,7 +101,7 @@ class FakeMac:
             assert self.approving, 'sign-in runs while the Mac approves it'
             self.signed_in.add(command[0])
         if command[:2] == ['security', 'add-trusted-cert']:
-            self.trusted = True
+            self.trusted_host = command[command.index('-s') + 1] if '-s' in command else '*'
 
     def keychain_call(self, server, value=None, *, delete=False):
         if delete:
@@ -157,6 +167,7 @@ class CommandTests(unittest.TestCase):
              patch.object(setup, 'pair_desktop', side_effect=self.mac.pair), \
              patch.object(setup, 'mac_approval', side_effect=self.mac.approval), \
              patch.object(setup, 'check_remote_mcp'), \
+             patch.object(setup, 'server_certificate', return_value=BUNDLED_CA.read_text()), \
              patch.object(setup, 'connection_opener', side_effect=AssertionError('no real network in tests')), \
              patch.object(setup, 'report_switches', side_effect=lambda *a: print('  Phone switches: monitor on · vocabulary off')), \
              patch.object(setup, 'key_state', side_effect=lambda server, key, ca=None: 'accepted' if key in self.mac.keychain.values() or key == KEY else 'rejected'), \
@@ -180,7 +191,13 @@ class CommandTests(unittest.TestCase):
         code, output = self.run_command('connect')
         ca = str(self.state_home / 'server.pem')
         self.assertEqual(self.state(), {'server': SERVER, 'desktopId': DESKTOP_ID,
-                                        'trust': {'keychain': setup.certificate_sha1(ca), 'claudeEnv': ca}})
+                                        'trust': {'keychain': setup.certificate_sha1(ca), 'host': HOST, 'claudeEnv': ca}})
+        security = [c for c in self.mac.commands if c[0] == 'security']
+        self.assertEqual(len(security), 2)
+        self.assertEqual(security[0][:3] + security[0][4:], ['security', 'verify-cert', '-c', '-p', 'ssl', '-s', HOST])
+        self.assertTrue(security[0][3].endswith('.pem'))  # the server's own certificate, fetched
+        self.assertEqual(security[1], ['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-s', HOST,
+                                       '-k', str(self.home / 'Library/Keychains/login.keychain-db'), ca])
         self.assertEqual(Path(ca).read_bytes(), BUNDLED_CA.read_bytes())
         self.assertEqual(sorted(p.name for p in self.state_home.iterdir()),
                          ['hooks', 'server.pem', 'state.json', 'translate-to-buddy'])
@@ -229,9 +246,10 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.mac.keychain, {})
         self.assertEqual(self.our_hooks(), [])
         self.assertEqual(json.loads((self.codex / 'hooks.json').read_text())['hooks']['Stop'], [{'hooks': [OTHER_HOOK]}])
-        config = tomllib.loads((self.codex / 'config.toml').read_text())
-        self.assertEqual(list(config['hooks']['state']), [f'{self.codex}/hooks.json:stop:0:0'])
-        self.assertEqual(config['mcp_servers'], {'other': {'url': 'https://o'}})
+        if tomllib:
+            config = tomllib.loads((self.codex / 'config.toml').read_text())
+            self.assertEqual(list(config['hooks']['state']), [f'{self.codex}/hooks.json:stop:0:0'])
+            self.assertEqual(config['mcp_servers'], {'other': {'url': 'https://o'}})
         self.assertTrue(list(self.codex.glob('config.toml.bak.*')))
         cache = json.loads((self.codex / '.codex-global-state.json').read_text())
         self.assertEqual(cache, {'mcp-server-tools-cache-v2': [{'server': 'other', 'tools': []}],
@@ -243,6 +261,9 @@ class CommandTests(unittest.TestCase):
         self.assertFalse(self.mac.plugin)
         self.assertNotIn(['claude', 'plugin', 'uninstall', 'workspace@another-marketplace'], self.mac.commands)
         self.assertFalse(self.mac.trusted)
+        sha1 = setup.certificate_sha1(BUNDLED_CA)
+        self.assertIn(['security', 'delete-certificate', '-t', '-Z', sha1, str(self.home / 'Library/Keychains/login.keychain-db')], self.mac.commands)
+        self.assertIn(f'✓ Server certificate trust for {HOST} removed from the login Keychain.', output)
         self.assertNotIn('env', json.loads((self.home / '.claude/settings.json').read_text()))
         self.assertFalse((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
         self.assertIn('This Mac is disconnected.', output)
@@ -301,6 +322,31 @@ class CommandTests(unittest.TestCase):
         self.run_command('connect', '--server', 'https://other.example', '--ca-cert', str(BUNDLED_CA))
         self.assertEqual(self.mac.keychain, {'https://other.example': KEY})
         self.assertEqual(self.state()['server'], 'https://other.example')
+        self.assertEqual(self.mac.trusted_host, 'other.example')  # the CA follows the server host
+        self.assertEqual(self.state()['trust']['host'], 'other.example')
+
+    def test_connect_replaces_an_older_trust_for_every_host(self):
+        # Before host scoping, connect trusted the CA for SSL to every host and recorded no host.
+        self.state_home.mkdir(parents=True)
+        sha1 = setup.certificate_sha1(BUNDLED_CA)
+        (self.state_home / 'state.json').write_text(json.dumps({'server': SERVER, 'trust': {'keychain': sha1}}))
+        self.mac.trusted_host = '*'
+        self.run_command('connect')
+        keychain = str(self.home / 'Library/Keychains/login.keychain-db')
+        security = [c for c in self.mac.commands if c[0] == 'security']
+        self.assertEqual(security[0], ['security', 'delete-certificate', '-t', '-Z', sha1, keychain])
+        self.assertEqual(security[-1][:9], ['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-s', HOST, '-k'])
+        self.assertEqual(self.mac.trusted_host, HOST)
+        self.assertEqual(self.state()['trust']['host'], HOST)
+
+    def test_server_trust_check_verifies_the_server_certificate_for_its_host(self):
+        commands = []
+        with patch.object(setup, 'server_certificate', return_value=BUNDLED_CA.read_text()), \
+             patch.object(setup, 'execute', side_effect=lambda c, env=None: (commands.append(c), (0, ''))[1]):
+            self.assertTrue(setup.server_trusted('https://10.0.0.5:8443'))
+        self.assertEqual(commands[0][:3] + commands[0][4:], ['security', 'verify-cert', '-c', '-p', 'ssl', '-s', '10.0.0.5'])
+        with patch.object(setup, 'server_certificate', side_effect=OSError('unreachable')):
+            self.assertFalse(setup.server_trusted('https://10.0.0.5:8443'))
 
 
 class PairingTests(unittest.TestCase):

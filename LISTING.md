@@ -19,7 +19,8 @@ and Disconnect removes everything — on the Mac and on the server.
 
 - Sends session status, prompts and replies of monitored sessions to the user's own Hexabuddy server account.
 - Approval requests only while the phone app watches that session; the terminal prompt stays available.
-- Translate → Buddy sends the selected text to the user's own LLM provider, then the result to their Hexabuddy server.
+- Translate → Buddy sends the selected text to the user's own Hexabuddy server account, which translates it (counted against the account's daily translation allowance, kept in its vocabulary and activity log) and shows or speaks the result; no model key or LLM settings on the Mac.
+- Server certificate: when connect adds trust for the Hexabuddy CA, macOS trusts it for SSL to the server host only.
 - No daemon, no background process; hooks run only on agent events.
 - Credentials: one desktop key in the macOS login Keychain; MCP sign-in held by the coding client.
 - Local state: `~/Library/Application Support/Hexabuddy` (no secrets). Disconnect revokes all of the Mac's keys on the server, deletes the Keychain key and that folder, and removes the entries it added to Claude Code and Codex.
