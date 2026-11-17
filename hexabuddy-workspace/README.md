@@ -90,6 +90,9 @@ one agent never waits on another.
 connect Hexabuddy
 ```
 
+If Claude Code is already connected, Codex can also sign in from its MCP settings: **hexabuddy-buddy → Authenticate**,
+then scan the QR code.
+
 ### Step 3 — Uninstall (removes everything)
 
 **Claude Code**
@@ -156,8 +159,6 @@ Keyboard Shortcuts → Services → Text.
 
 - **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
   trust the 6 Hexabuddy hooks; until then Codex sessions do not show on the phone (status shows `Codex hooks trusted: 6/6`).
-- **Codex sign-in another way:** once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex),
-  you can instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code it shows.
 - **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
 - **Vocabulary** needs no switch: a word is saved only when you choose Translate → Buddy yourself.
 - **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
