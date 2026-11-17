@@ -675,9 +675,11 @@ def remove_codex_trust_records(ids):
 
 def codex_app_running():
     # The Codex app ships inside ChatGPT.app; its processes name the framework or its user-data folder.
+    # Crash-reporter helpers (browser_crashpad_handler) keep running after ChatGPT quits; they never touch the cache, so
+    # they do not count (BUG-039: uninstall refused forever after quitting).
     markers = ('Codex Framework.framework', 'Application Support/Codex', '/Codex.app/Contents/MacOS/')
     listing = run(['ps', '-axo', 'command'], check=False)
-    return any(marker in listing for marker in markers)
+    return any(any(marker in line for marker in markers) and 'crashpad_handler' not in line for line in listing.splitlines())
 
 
 def without_mcp_entries(value):

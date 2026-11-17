@@ -376,6 +376,14 @@ class CommandTests(unittest.TestCase):
         self.assertNotIn('hexabuddy-buddy', cache.read_text())
         self.assertEqual(self.mac.keychain, {})
 
+    def test_crash_reporter_left_after_quitting_chatgpt_is_not_the_codex_app(self):
+        # BUG-039: only browser_crashpad_handler helpers remain after ChatGPT quits; uninstall must go ahead.
+        helper = '/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/1/Helpers/browser_crashpad_handler --monitor-self\n'
+        with patch.object(setup, 'run', return_value=helper):
+            self.assertFalse(setup.codex_app_running())
+        with patch.object(setup, 'run', return_value=helper + '/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/1/Codex (Renderer).app/x\n'):
+            self.assertTrue(setup.codex_app_running())
+
     def test_uninstall_leaves_nothing_of_the_plugin(self):
         # design/desktop.md "Nothing left": the config backups connect made and Claude's plugin cache go too.
         self.connect_and_trust()
