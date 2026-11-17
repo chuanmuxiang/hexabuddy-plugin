@@ -396,7 +396,7 @@ class CommandTests(unittest.TestCase):
         left = [p.name for p in self.codex.iterdir() if '.bak.' in p.name and 'hexabuddy' in p.read_text().lower()]
         self.assertEqual(left, [], 'backups naming the plugin are removed')
         self.assertTrue(mine.exists(), 'a backup that does not name the plugin is kept')
-        self.assertFalse((self.home / '.claude/plugins/cache/hexabuddy-plugin').exists())
+        self.assertTrue((self.home / '.claude/plugins/cache/hexabuddy-plugin').exists(), 'running sessions load their hooks from it (BUG-040)')
         self.assertFalse(self.state_home.exists())
         self.assertFalse((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
 

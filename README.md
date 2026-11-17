@@ -160,7 +160,9 @@ Keyboard → Keyboard Shortcuts → Services → Text).
 
 ## Notice
 
-- **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
+- **Server certificate:** macOS asks for your password once at install (to trust the Hexabuddy server certificate, for
+  the server's address only) and once at uninstall (to remove that trust).
+- **After uninstall,** restart open Claude Code and Codex sessions; they keep the hooks they loaded at start.
 - **Permission prompts are not sent to the phone**, because the plugin runs no extra process on your Mac (today an
   agent can hand them only to a local process). They stay in the terminal until an agent can send them over MCP.
 

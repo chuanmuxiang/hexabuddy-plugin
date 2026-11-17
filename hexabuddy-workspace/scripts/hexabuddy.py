@@ -703,8 +703,8 @@ PLUGIN_MARKERS = (MCP_NAME, 'HEXABUDDY_AGENT', 'hexabuddy-workspace')
 
 
 def remove_leftovers():
-    # "Nothing left" (design/desktop.md): the config backups this plugin made that still name it, and Claude Code's
-    # download cache of the plugin (claude plugin uninstall keeps it). Other backups and files are never touched.
+    # "Nothing left" (design/desktop.md): the config backups this plugin made that still name it. Other backups and files
+    # are never touched.
     removed = 0
     for folder in (codex_home(), claude_settings_path().parent, Path.home()):
         if not folder.is_dir():
@@ -717,10 +717,9 @@ def remove_leftovers():
                     continue
                 if any(marker in text for marker in PLUGIN_MARKERS):
                     path.unlink(); removed += 1
-    cache = claude_settings_path().parent / 'plugins/cache/hexabuddy-plugin'
-    if cache.is_dir():
-        shutil.rmtree(cache, ignore_errors=True)
-    print(f'✓ Leftovers removed: {removed} config backup(s), Claude Code plugin cache.')
+    # Claude Code's download cache stays: sessions still running load their hooks from it, and deleting it made every
+    # prompt in them fail ("Plugin directory does not exist", BUG-040) until restarted; Claude Code cleans it itself.
+    print(f'✓ Leftovers removed: {removed} config backup(s).')
 
 
 def clear_codex_app_cache():
