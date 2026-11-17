@@ -118,8 +118,10 @@ macOS asks once to trust the Hexabuddy server certificate, for the server's addr
 Hexabuddy status
 ```
 
-**Monitor on this Mac.** Turn session monitoring off and the hooks stop on the Mac before sending anything: no
-status, prompt or reply leaves it. Agent questions and Translate → Buddy still work. Turn it on again the same way.
+**Monitor on this Mac: for privacy.** Working on something sensitive (client code, secrets in a prompt)? Turn
+monitoring off on the Mac and your prompts and the agent's replies **never leave your Mac**: the hooks stop before
+any network call. (The phone's Monitor switch only hides sessions; the data would still be sent to the server.) Agent
+questions and Translate → Buddy still work, since you choose to use them. Turn it on again the same way.
 
 **Claude Code**
 
