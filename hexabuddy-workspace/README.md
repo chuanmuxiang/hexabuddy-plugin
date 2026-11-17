@@ -91,6 +91,9 @@ It shows a QR code: scan it in the app with **Devices → Scan QR code**.
 **or Codex, if Claude Code is already connected**: in Codex's MCP settings choose **hexabuddy-buddy → Authenticate**, then
 scan the QR code.
 
+**Codex only, after connecting**: open `/hooks` in Codex and trust the 6 Hexabuddy hooks, or Codex sessions won't
+show on the phone.
+
 ### Step 3 — Uninstall (removes everything)
 
 **Claude Code**
@@ -157,8 +160,6 @@ Keyboard → Keyboard Shortcuts → Services → Text).
 
 ## Notice
 
-- **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
-  trust the 6 Hexabuddy hooks; until then Codex sessions do not show on the phone (status shows `Codex hooks trusted: 6/6`).
 - **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
 - **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
   plugin never runs an extra process on your Mac.
