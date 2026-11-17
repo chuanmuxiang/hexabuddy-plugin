@@ -268,6 +268,19 @@ class CommandTests(unittest.TestCase):
         self.assertIsNone(self.mac.codex_mcp)
         self.assertTrue((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
 
+    def test_monitor_switch_on_this_mac(self):
+        self.connect_and_trust()
+        code, output = self.run_command('monitor', 'off')
+        self.assertEqual(code, 0)
+        self.assertIs(self.state()['monitor'], False)
+        self.assertIn('Monitor on this Mac: off', self.run_command('status')[1])
+        with patch.object(setup, 'calling_agent', return_value='claude'):
+            self.run_command('connect')
+        self.assertIs(self.state()['monitor'], False, 'connect again keeps the local switch')
+        self.run_command('monitor', 'on')
+        self.assertNotIn('monitor', self.state())
+        self.assertIn('Monitor on this Mac: on', self.run_command('status')[1])
+
     def test_connect_again_changes_nothing(self):
         self.connect_and_trust()
         hooks = (self.codex / 'hooks.json').read_text()

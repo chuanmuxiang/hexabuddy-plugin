@@ -89,6 +89,8 @@ if __name__ == '__main__':
     try:
         if sys.argv[1:] != ['shell']:
             raise RuntimeError('Usage: config.py shell')
+        if state().get('monitor') is False:
+            sys.exit(3)  # monitoring off on this Mac (`hexabuddy.py monitor off`): the hook sends nothing, quietly
         conn = connection()
         values = [str(home()), conn['server'], conn['ca_cert'], credential(conn)]
         if any('\n' in value for value in values):

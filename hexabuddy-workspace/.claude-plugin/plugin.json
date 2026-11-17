@@ -1,6 +1,6 @@
 {
   "name": "hexabuddy-workspace",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Watch Claude Code and Codex sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy.",
   "author": {
     "name": "hexabuddy"
