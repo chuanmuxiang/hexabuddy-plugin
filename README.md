@@ -51,7 +51,7 @@ added to the client configs, the CA trust and the Quick Action. No other file is
 
 ## Usage
 
-The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.
+The commands are also in the app, each with a Copy button: **Devices → How to connect a Mac**.
 
 ### Step 1 — Install the plugin
 
@@ -90,7 +90,7 @@ one agent never waits on another.
 connect Hexabuddy
 ```
 
-### Step 3 — Check every piece
+### Step 3 — Status: check every piece
 
 **Claude Code**
 
@@ -104,7 +104,11 @@ connect Hexabuddy
 Hexabuddy status
 ```
 
-**Sync to phone** (off / on)
+### Step 4 — Sync to phone (off / on)
+
+For privacy, turn sync off and your prompts and the agent's replies never leave your Mac; turn it on again to see
+your sessions on the phone.
+
 
 **Claude Code**
 
@@ -126,7 +130,13 @@ Hexabuddy sync off
 Hexabuddy sync on
 ```
 
-### Step 4 — Disconnect (removes everything)
+### Step 5 — Translate → Buddy
+
+Select text in any native app → right-click → **Services → Translate → Buddy**: a word becomes a card on your buddy
+and in the app's Vocab tab; longer text is spoken. Connect installs it; bind a hotkey in System Settings → Keyboard →
+Keyboard Shortcuts → Services → Text.
+
+### Step 6 — Disconnect (removes everything)
 
 **Claude Code**
 
@@ -147,9 +157,7 @@ disconnect Hexabuddy
 - **Codex sign-in another way:** once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex),
   you can instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code it shows.
 - **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
-- **Translate → Buddy:** connect installs it; select text in any native app → right-click → **Services → Translate → Buddy**.
-- **Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac.
-  Vocabulary needs no switch: a word is saved only when you choose Translate → Buddy yourself.
+- **Vocabulary** needs no switch: a word is saved only when you choose Translate → Buddy yourself.
 - **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
   plugin never runs an extra process on your Mac.
 - **Disconnect removes everything:** it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
