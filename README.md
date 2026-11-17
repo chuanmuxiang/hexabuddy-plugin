@@ -72,8 +72,7 @@ codex plugin marketplace add chuanmuxiang/hexabuddy-plugin
 
 ### Step 2 — Connect
 
-Connect from each agent by itself; each one shows a QR code to scan in the app with **Devices → Scan QR code**, and
-one agent never waits on another.
+Connect from each agent by itself.
 
 **Claude Code**
 
@@ -86,6 +85,8 @@ one agent never waits on another.
 ```
 connect Hexabuddy
 ```
+
+It shows a QR code: scan it in the app with **Devices → Scan QR code**.
 
 If Claude Code is already connected, Codex can also sign in from its MCP settings: **hexabuddy-buddy → Authenticate**,
 then scan the QR code.
