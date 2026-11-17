@@ -49,7 +49,7 @@ plus **Translate → Buddy** for any selected word on your Mac.
 Disconnect revokes the key on the server, deletes the Keychain item and the whole folder, and removes the entries it
 added to the client configs, the CA trust and the Quick Action. No other file is read or written.
 
-## Usage
+## Install
 
 The commands are also in the app, each with a Copy button: **Devices → How to connect a Mac**.
 
@@ -90,7 +90,23 @@ one agent never waits on another.
 connect Hexabuddy
 ```
 
-### Step 3 — Status: check every piece
+### Step 3 — Uninstall: disconnect (removes everything)
+
+**Claude Code**
+
+```
+/hexabuddy-workspace:disconnect
+```
+
+**or Codex** (ask):
+
+```
+disconnect Hexabuddy
+```
+
+## Usage
+
+### Status: check every piece
 
 **Claude Code**
 
@@ -104,7 +120,7 @@ connect Hexabuddy
 Hexabuddy status
 ```
 
-### Step 4 — Sync to phone (off / on)
+### Sync to phone (off / on)
 
 For privacy, turn sync off and your prompts and the agent's replies never leave your Mac; turn it on again to see
 your sessions on the phone.
@@ -130,25 +146,11 @@ Hexabuddy sync off
 Hexabuddy sync on
 ```
 
-### Step 5 — Translate → Buddy
+### Translate → Buddy
 
 Select text in any native app → right-click → **Services → Translate → Buddy**: a word becomes a card on your buddy
 and in the app's Vocab tab; longer text is spoken. Connect installs it; bind a hotkey in System Settings → Keyboard →
 Keyboard Shortcuts → Services → Text.
-
-### Step 6 — Disconnect (removes everything)
-
-**Claude Code**
-
-```
-/hexabuddy-workspace:disconnect
-```
-
-**or Codex** (ask):
-
-```
-disconnect Hexabuddy
-```
 
 ## Notice
 
