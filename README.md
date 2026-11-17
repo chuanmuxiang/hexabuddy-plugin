@@ -46,9 +46,6 @@ plus **Translate → Buddy** for any selected word on your Mac.
 | Claude Code / Codex configs | plugin, hooks and their Codex trust records, `hexabuddy-buddy`, `NODE_EXTRA_CA_CERTS` |
 | Login Keychain trust, `~/Library/Services` | server CA trusted for SSL to the server host only (if connect added it), Translate → Buddy Quick Action |
 
-Disconnect revokes the key on the server, deletes the Keychain item and the whole folder, and removes the entries it
-added to the client configs, the CA trust and the Quick Action. No other file is read or written.
-
 ## Install
 
 The commands are also in the app, each with a Copy button: **Devices → How to connect a Mac**.
