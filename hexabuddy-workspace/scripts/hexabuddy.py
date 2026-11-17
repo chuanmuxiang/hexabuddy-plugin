@@ -274,7 +274,7 @@ def pairing_window(pair, name):
                 '<style>body{font:18px system-ui;color:#17202a;background:#fff;max-width:36rem;margin:7vh auto;padding:24px;text-align:center}img{width:320px;max-width:100%}p{line-height:1.5}</style>'
                 + content + '</html>')
     with os.fdopen(fd, 'w') as file:
-        file.write(page(f'<h1>Pair {html.escape(name)}</h1><p>On your phone: Settings → Connected desktops → Add desktop.</p>'
+        file.write(page(f'<h1>Pair {html.escape(name)}</h1><p>On your phone: Hexabuddy app → Devices → Scan QR code.</p>'
                         f'<img alt="Pairing QR code" src="{image}"><p>Scan to connect automatically.</p>'
                         f'<details><summary>Can’t scan?</summary><p>Enter {html.escape(pair["user_code"])} on your phone.</p></details>'
                         '<p>This code expires in 10 minutes.</p>'))
@@ -310,7 +310,7 @@ def pair_desktop(server, name, ca_cert=None, desktop_id=None):
     if not re.fullmatch(r'[A-F0-9]{5}-[A-F0-9]{5}', user_code):
         raise SetupError('Server returned an invalid pairing code.')
     print('Scan the QR code in the pairing window to connect automatically.', flush=True)
-    print(f'If scanning is unavailable, enter {user_code} under Settings → Connected desktops → Add desktop.', flush=True)
+    print(f'Scan the QR code with the Hexabuddy app: Devices → Scan QR code (pairing code {user_code}). If it expires, run connect again.', flush=True)
     deadline = time.monotonic() + min(600, max(1, pair.get('expires_in', 600)))
     with pairing_window(pair, name):
         while time.monotonic() < deadline:
@@ -820,7 +820,7 @@ def disconnect(args):
     if revoked:
         print('This Mac is disconnected.')
     else:
-        print('This Mac is cleared locally. If the phone still lists it: Settings → Connected desktops → Disconnect this Mac.')
+        print('This Mac is cleared locally. If the phone still lists it: Devices → this Mac → Disconnect this Mac.')
     return 0 if cache_cleared else 1
 
 

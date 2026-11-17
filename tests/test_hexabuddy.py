@@ -280,7 +280,7 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.mac.keychain, {})
         self.assertFalse(self.state_home.exists())
         self.assertIn('✗ Server: server unreachable', output)
-        self.assertIn('Settings → Connected desktops → Disconnect this Mac', output)
+        self.assertIn('Devices → this Mac → Disconnect this Mac', output)
 
     def test_running_codex_app_keeps_its_cache_until_rerun(self):
         self.connect_and_trust()

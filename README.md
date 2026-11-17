@@ -22,7 +22,7 @@ Translate → Buddy needs nothing more: no model key, LLM settings file or Pillo
 | Check every piece | `/hexabuddy-workspace:status` | ask: "Hexabuddy status" |
 | Disconnect and remove everything | `/hexabuddy-workspace:disconnect` | ask: "disconnect Hexabuddy" |
 
-Connect opens a QR page: in the app, **Settings → Connected desktops → Add desktop** and scan it. macOS asks once to
+Connect opens a QR page: in the app, **Devices → Scan QR code** and scan it. macOS asks once to
 trust the Hexabuddy server certificate, for the server's address only. Connect sets up both Claude Code and Codex when both are installed.
 
 On the phone, each Mac has two switches: **Monitor sessions and approvals** and **Save vocabulary cards**, and a
