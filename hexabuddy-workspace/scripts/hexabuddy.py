@@ -975,14 +975,14 @@ def report_agent(agent, report):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['connect', 'disconnect', 'status', 'sync'])
+    parser.add_argument('command', choices=['connect', 'uninstall', 'disconnect', 'status', 'sync'])  # disconnect = old name of uninstall
     parser.add_argument('state', nargs='?', choices=['on', 'off'], help='sync: on or off (no value: show it)')
     parser.add_argument('--server', help='connect: server URL (default: connection.json)')
     parser.add_argument('--ca-cert', help='connect: PEM CA certificate for that server')
     parser.add_argument('--name', default=socket.gethostname()[:80], help='connect: name shown on the phone')
     parser.add_argument('--api-key', action='store_true', help='connect: paste a key created on the phone instead of scanning')
     args = parser.parse_args(argv)
-    return {'connect': connect, 'disconnect': disconnect, 'status': status, 'sync': sync}[args.command](args)
+    return {'connect': connect, 'uninstall': disconnect, 'disconnect': disconnect, 'status': status, 'sync': sync}[args.command](args)
 
 
 if __name__ == '__main__':

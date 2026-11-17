@@ -90,18 +90,18 @@ one agent never waits on another.
 connect Hexabuddy
 ```
 
-### Step 3 — Uninstall: disconnect (removes everything)
+### Step 3 — Uninstall (removes everything)
 
 **Claude Code**
 
 ```
-/hexabuddy-workspace:disconnect
+/hexabuddy-workspace:uninstall
 ```
 
 **or Codex** (ask):
 
 ```
-disconnect Hexabuddy
+uninstall Hexabuddy
 ```
 
 ## Usage
@@ -162,7 +162,7 @@ Keyboard Shortcuts → Services → Text.
 - **Vocabulary** needs no switch: a word is saved only when you choose Translate → Buddy yourself.
 - **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
   plugin never runs an extra process on your Mac.
-- **Disconnect removes everything:** it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
+- **Uninstall removes everything:** it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
   the key, the CA trust and Translate → Buddy; nothing is left to uninstall. Lost the Mac? On the phone,
   **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 

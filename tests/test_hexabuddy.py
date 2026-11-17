@@ -296,7 +296,7 @@ class CommandTests(unittest.TestCase):
                  'mcp-extension-sidebar-catalog': [{'name': 'hexabuddy-buddy'}, {'name': 'docs'}], 'unrelated': 1}
         (self.codex / '.codex-global-state.json').write_text(json.dumps(state))
         self.mac.commands.clear()
-        code, output = self.run_command('disconnect')
+        code, output = self.run_command('uninstall')   # the command's name; disconnect stays an alias
         self.assertEqual(code, 0, output)
         self.assertEqual(self.mac.server_calls, [('/desktop/revoke-self', KEY)])
         self.assertIn('✓ Server: revoked 2 key(s) of this Mac (hooks, questions)', output)
