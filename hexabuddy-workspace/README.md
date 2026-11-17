@@ -3,30 +3,90 @@
 See your coding sessions on your phone: status, approvals and agent questions in the Hexabuddy app,
 plus **Translate → Buddy** for any selected word on your Mac.
 
-## Install
-
-| Client | Command |
-|---|---|
-| Claude Code | `/plugin marketplace add chuanmuxiang/hexabuddy-plugin` then `/plugin install hexabuddy-workspace@hexabuddy-plugin` |
-| Codex | `codex plugin marketplace add chuanmuxiang/hexabuddy-plugin` then install **Hexabuddy** from `/plugins` |
-
 Requirements: macOS, the Hexabuddy app signed in on your phone, Python 3 (Xcode Command Line Tools) and `jq`.
 Translate → Buddy needs nothing more: no model key, LLM settings file or Pillow; your Hexabuddy server translates
 (it counts against your account's daily translation allowance).
 
-## Use
+## Usage
 
-| Step | Claude Code | Codex |
-|---|---|---|
-| Connect (one phone scan) | `/hexabuddy-workspace:connect` | ask: "connect Hexabuddy" |
-| Check every piece | `/hexabuddy-workspace:status` | ask: "Hexabuddy status" |
-| Disconnect and remove everything | `/hexabuddy-workspace:disconnect` | ask: "disconnect Hexabuddy" |
+The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.
 
-Connect opens a QR page: in the app, **Devices → Scan QR code** and scan it. macOS asks once to
-trust the Hexabuddy server certificate, for the server's address only. Connect sets up both Claude Code and Codex when both are installed.
+### Step 1 — Install the plugin
 
-On the phone, each Mac has two switches: **Monitor sessions and approvals** and **Save vocabulary cards**, and a
-**Disconnect this Mac** button that works even when the Mac is offline.
+Install it in each agent you use.
+
+**Claude Code**
+
+```
+/plugin marketplace add chuanmuxiang/hexabuddy-plugin
+```
+
+```
+/plugin install hexabuddy-workspace@hexabuddy-plugin
+```
+
+**or Codex**, in a terminal, then install **Hexabuddy** from `/plugins`:
+
+```
+codex plugin marketplace add chuanmuxiang/hexabuddy-plugin
+```
+
+### Step 2 — Connect
+
+Connect from each agent by itself; each one shows a QR code to scan in the app with **Devices → Scan QR code**, and
+one agent never waits on another.
+
+**Claude Code**
+
+```
+/hexabuddy-workspace:connect
+```
+
+**or Codex** (ask):
+
+```
+connect Hexabuddy
+```
+
+> **Note:** in Codex, once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex), you can
+> instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code the page shows.
+
+macOS asks once to trust the Hexabuddy server certificate, for the server's address only. Connect also installs
+**Translate → Buddy**: select text in any native app → right-click → **Services → Translate → Buddy**.
+
+### Step 3 — Check every piece
+
+**Claude Code**
+
+```
+/hexabuddy-workspace:status
+```
+
+**or Codex** (ask):
+
+```
+Hexabuddy status
+```
+
+### Step 4 — Disconnect before you uninstall
+
+**Claude Code**
+
+```
+/hexabuddy-workspace:disconnect
+```
+
+**or Codex** (ask):
+
+```
+disconnect Hexabuddy
+```
+
+Uninstalling the plugin does **not** do this: Claude Code and Codex run nothing when a plugin is uninstalled, so the
+key, hooks, CA trust and Quick Action would stay. Disconnect first, then uninstall. Lost the Mac? On the phone,
+**Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
+
+On the phone, each Mac also has two switches: **Monitor sessions and approvals** and **Save vocabulary cards**.
 
 ## What is sent
 

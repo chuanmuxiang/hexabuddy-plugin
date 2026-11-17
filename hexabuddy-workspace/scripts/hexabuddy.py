@@ -587,6 +587,32 @@ def codex_trust_records():
         return set()
 
 
+def add_codex_entry_quietly(server, desktop_id):
+    # Write the hexabuddy-buddy table into Codex's config.toml directly: `codex mcp add` starts an OAuth sign-in and
+    # waits on it. Same keys `codex mcp add --url --oauth-resource --oauth-client-id` writes; backup first, must parse.
+    path, url = codex_home() / 'config.toml', server + '/mcp'
+    text = path.read_text() if path.exists() else ''
+    kept, skipping = [], False
+    for line in text.splitlines(keepends=True):
+        if line.lstrip().startswith('['):
+            skipping = re.match(r'\s*\[mcp_servers\.' + re.escape(MCP_NAME) + r'(\.|\])', line) is not None
+        if not skipping:
+            kept.append(line)
+    body = ''.join(kept)
+    if body and not body.endswith('\n'):
+        body += '\n'
+    body += (f'\n[mcp_servers.{MCP_NAME}]\nurl = {json.dumps(url)}\noauth_resource = {json.dumps(url)}\n\n'
+             f'[mcp_servers.{MCP_NAME}.oauth]\nclient_id = {json.dumps(mcp_client_id("codex", desktop_id))}\n')
+    if body == text:
+        return
+    if tomllib:
+        tomllib.loads(body)  # never write a config Codex cannot parse
+    if path.exists():
+        backup(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body)
+
+
 def remove_codex_trust_records(ids):
     # Drop the trust-record tables of our removed hooks from config.toml (backup first, result must parse).
     path = codex_home() / 'config.toml'
@@ -788,14 +814,34 @@ def connect(args):
     save_settings(state_path(), state, keep_backup=False)
     print(f'✓ Paired; state saved to {state_path()}.')
     install_copies()
-    for agent in agents:
+    install_quick_action()   # first: no agent's sign-in can block it
+    caller = calling_agent()
+    for agent in sorted(agents, key=lambda a: a != caller):   # the agent running connect goes first
         if agent == 'claude':
             install_claude()
         else:
             configure_codex_hooks()
-        connect_mcp(agent, server, api_key, desktop_id, ca_cert)
-    install_quick_action()
+        if caller and agent != caller:
+            # Never wait on another agent's browser sign-in. Codex gets its hexabuddy-buddy entry (no sign-in), so it can
+            # Authenticate it from /mcp later; that page asks for its own QR scan.
+            if agent == 'codex':
+                add_codex_entry_quietly(server, desktop_id)
+            print(f'• {agent}: hooks and {MCP_NAME} added; sign it in from {agent}: /mcp → {MCP_NAME} → Authenticate, '
+                  'then scan the QR code with Devices → Scan QR code.', flush=True)
+            continue
+        try:
+            connect_mcp(agent, server, api_key, desktop_id, ca_cert)
+        except (SetupError, subprocess.CalledProcessError, OSError) as error:
+            print(f'! {agent}: {MCP_NAME} sign-in did not finish ({error}). Run connect again from {agent}.', flush=True)
     return status(args)
+
+
+def calling_agent():
+    # The agent whose plugin command runs this script: Claude Code marks its shell with CLAUDECODE. Unknown (a plain
+    # terminal) → None: every agent found is connected and signed in, as before.
+    if os.environ.get('CLAUDECODE') or os.environ.get('CLAUDE_CODE_ENTRYPOINT'):
+        return 'claude'
+    return None
 
 
 def disconnect(args):

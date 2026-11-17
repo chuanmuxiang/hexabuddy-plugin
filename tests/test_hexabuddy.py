@@ -222,6 +222,47 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertNotIn(KEY, output)
 
+    def test_connect_from_claude_never_waits_on_codex(self):
+        # Run from Claude Code (CLAUDECODE set): the Quick Action and Claude's sign-in happen; Codex gets its hooks
+        # but no blocking browser sign-in (it connects from Codex itself).
+        with patch.dict(os.environ, {'CLAUDECODE': '1'}):
+            original = setup.calling_agent
+            with patch.object(setup, 'calling_agent', return_value='claude'):
+                code, output = self.run_command('connect')
+        self.assertTrue((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
+        self.assertEqual(self.mac.signed_in, {'claude'})
+        self.assertIsNone(self.mac.codex_mcp)   # no `codex mcp add`: it would start a sign-in and wait
+        config = (self.codex / 'config.toml').read_text()
+        self.assertIn('[mcp_servers.hexabuddy-buddy]\nurl = "' + SERVER + '/mcp"', config)
+        self.assertIn('client_id = "hexabuddy-codex.' + DESKTOP_ID + '"', config)
+        self.assertIn('codex: hooks and hexabuddy-buddy added; sign it in from codex: /mcp', output)
+        with patch.object(setup, 'calling_agent', return_value='claude'):
+            self.run_command('connect')
+        self.assertEqual((self.codex / 'config.toml').read_text().count('[mcp_servers.hexabuddy-buddy]'), 1, 'connect again: one entry')
+        self.assertIn('✓ claude hexabuddy-buddy: connected', output)
+        self.assertNotIn(KEY, output)
+
+    def test_second_agent_connects_later_without_a_new_scan(self):
+        # Claude Code connects first (one scan); later connect from Codex reuses this Mac's desktop key: no new pairing.
+        with patch.object(setup, 'calling_agent', return_value='claude'):
+            self.run_command('connect')
+        self.assertEqual(self.mac.pairings, 1)
+        self.assertEqual(self.mac.signed_in, {'claude'})
+        with patch.object(setup, 'calling_agent', return_value='codex'):
+            code, output = self.run_command('connect')
+        self.assertEqual(self.mac.pairings, 1, 'no second QR scan')
+        self.assertEqual(self.mac.signed_in, {'claude', 'codex'})
+        self.assertEqual(self.mac.codex_mcp, {'url': SERVER + '/mcp', 'client': 'hexabuddy-codex.' + DESKTOP_ID})
+        self.assertNotIn(KEY, output)
+
+    def test_connect_with_only_claude_installed(self):
+        # A Mac without Codex: connect sets up Claude only, says nothing about Codex hooks failing.
+        with patch.object(setup, 'calling_agent', return_value='claude'):
+            code, output = self.run_command('connect', which=('claude', 'jq'))
+        self.assertEqual(self.mac.signed_in, {'claude'})
+        self.assertIsNone(self.mac.codex_mcp)
+        self.assertTrue((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
+
     def test_connect_again_changes_nothing(self):
         self.connect_and_trust()
         hooks = (self.codex / 'hooks.json').read_text()
