@@ -41,6 +41,7 @@ AGENTS = ('claude', 'codex')
 MCP_NAME = 'hexabuddy-buddy'
 KEY_FORMAT = re.compile(r'hb_desktop_[a-f0-9]{64}')
 DESKTOP_ID = re.compile(r'[a-f0-9]{32}')
+CODEX_TOOL_TIMEOUT = 600  # s; well above the server's 50 s hold per ask_human / get_human_answer call
 CODEX_EVENTS = ('SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop')  # status only: permission prompts stay in the terminal
 
 
@@ -584,6 +585,37 @@ def codex_trust_records():
         return set()
 
 
+def set_codex_tool_timeout():
+    # Ask and wait (server.md §4.8): one ask_human call holds up to 50 s, close to Codex's default 60 s tool timeout. Set
+    # tool_timeout_sec in the hexabuddy-buddy table (backup first, must parse); nothing else in config.toml changes.
+    path = codex_home() / 'config.toml'
+    if not path.exists():
+        return
+    lines, out, inside, done = path.read_text().splitlines(keepends=True), [], False, False
+    for line in lines:
+        if line.lstrip().startswith('['):
+            if inside and not done:
+                at = len(out)
+                while at and not out[at - 1].strip():   # directly under the table's keys, before its blank lines
+                    at -= 1
+                out.insert(at, f'tool_timeout_sec = {CODEX_TOOL_TIMEOUT}\n'); done = True
+            inside = re.match(r'\s*\[mcp_servers\.' + re.escape(MCP_NAME) + r'\]', line) is not None
+        elif inside and re.match(r'\s*tool_timeout_sec\s*=', line):
+            line, done = f'tool_timeout_sec = {CODEX_TOOL_TIMEOUT}\n', True
+        out.append(line)
+    if inside and not done:
+        if out and not out[-1].endswith('\n'):
+            out[-1] += '\n'
+        out.append(f'tool_timeout_sec = {CODEX_TOOL_TIMEOUT}\n')
+    text = ''.join(out)
+    if text == ''.join(lines):
+        return
+    if tomllib:
+        tomllib.loads(text)  # never write a config Codex cannot parse
+    backup(path)
+    path.write_text(text)
+
+
 def add_codex_entry_quietly(server, desktop_id):
     # Write the hexabuddy-buddy table into Codex's config.toml directly: `codex mcp add` starts an OAuth sign-in and
     # waits on it. Same keys `codex mcp add --url --oauth-resource --oauth-client-id` writes; backup first, must parse.
@@ -599,7 +631,7 @@ def add_codex_entry_quietly(server, desktop_id):
     if body and not body.endswith('\n'):
         body += '\n'
     body += (f'\n[mcp_servers.{MCP_NAME}]\nurl = {json.dumps(url)}\noauth_resource = {json.dumps(url)}\n\n'
-             f'[mcp_servers.{MCP_NAME}.oauth]\nclient_id = {json.dumps(mcp_client_id("codex", desktop_id))}\n')
+             f'tool_timeout_sec = {CODEX_TOOL_TIMEOUT}\n\n[mcp_servers.{MCP_NAME}.oauth]\nclient_id = {json.dumps(mcp_client_id("codex", desktop_id))}\n')
     if body == text:
         return
     if tomllib:
@@ -695,10 +727,12 @@ def add_mcp_entry(agent, server, desktop_id, ca_cert):
         existing = json.loads(run(['codex', 'mcp', 'get', MCP_NAME, '--json'], check=False) or '{}')
         transport = existing.get('transport', {})
         if transport.get('type') == 'streamable_http' and transport.get('url') == url and existing.get('enabled') is not False:
+            set_codex_tool_timeout()
             return
         run(['codex', 'mcp', 'remove', MCP_NAME], check=False)
         run_interactive(['codex', 'mcp', 'add', MCP_NAME, '--url', url, '--oauth-resource', url,
                          '--oauth-client-id', mcp_client_id('codex', desktop_id)], client_env('codex', ca_cert))
+        set_codex_tool_timeout()
         return
     code, output = execute(['claude', 'mcp', 'get', MCP_NAME])
     if code == 0 and re.search(r'^\s*URL: ' + re.escape(url) + r'\s*$', output, re.M):

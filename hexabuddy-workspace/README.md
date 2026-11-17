@@ -7,6 +7,39 @@ Requirements: macOS, the Hexabuddy app signed in on your phone, Python 3 (Xcode 
 Translate → Buddy needs nothing more: no model key, LLM settings file or Pillow; your Hexabuddy server translates
 (it counts against your account's daily translation allowance).
 
+## How it works
+
+```text
+  ┌─── MAC: AGENT ──────────────┐   ┌─── SERVER ────────────┐   ┌─── APP / BUDDY ─────────┐
+  │ ① SESSION STATUS (hooks)    │   │                       │   │                         │
+  │ event: start·prompt·tool·   │   │                       │   │                         │
+  │ stop                        │   │                       │   │                         │
+  │ report-status.sh ───────────┼──▶│ /sessions/<id>/event ─┼──▶│ Phone: Workspace feed   │
+  │ (prompt·reply·project)      │   │ → session             │   │ Buddy: session badge    │
+  ├─────────────────────────────┤   ├───────────────────────┤   ├─────────────────────────┤
+  │ ② ASK AND WAIT (agent MCP)  │   │                       │   │                         │
+  │ ask_human("delete?") ───────┼──▶│ /ask holds ≤ 50 s ────┼──▶│ Phone: question card    │
+  │ agent blocks,               │   │                       │   │                         │
+  │ get_human_answer…           │   │                       │   │                         │
+  │ agent continues ◀───────────┼───┤ answer ◀──────────────┼───┤ tap Yes/No → Send       │
+  ├─────────────────────────────┤   ├───────────────────────┤   ├─────────────────────────┤
+  │ ③ TRANSLATE → BUDDY         │   │                       │   │                         │
+  │ select → right-click ───────┼──▶│ translate·card·say ───┼──▶│ Buddy: card / speech    │
+  │                             │   │ · vocab               │   │ Phone: Vocab tab        │
+  ├─────────────────────────────┤   ├───────────────────────┤   ├─────────────────────────┤
+  │ ④ PERMISSION PROMPTS        │   │                       │   │                         │
+  │ → terminal only             │   │ ✗ nothing sent        │   │ ✗ no approval cards     │
+  │ (auto mode: none)           │   │                       │   │                         │
+  └─────────────────────────────┘   └───────────────────────┘   └─────────────────────────┘
+```
+
+1. **Session status:** the agent's hooks run `report-status.sh`, which sends your prompt, the agent's reply and the
+   project name to your Hexabuddy server and exits at once.
+2. **Ask and wait:** when the agent needs your decision or OK, it calls `ask_human` over its own `hexabuddy-buddy` MCP
+   connection and waits; you answer on the phone and it continues.
+3. **Translate → Buddy:** select text, right-click → Services → Translate → Buddy.
+4. **Permission prompts** stay in the terminal (below).
+
 ## Phone approvals: not yet
 
 Permission prompts are answered in the terminal on your Mac, not on the phone. The phone will approve them once an
@@ -19,6 +52,7 @@ Why not now:
   each agent talks to Hexabuddy itself through its own `hexabuddy-buddy` MCP connection, and the hooks only report
   status and exit at once. Simple, and nothing to break or clean up.
 - **Agents mostly run in automatic mode.** Few prompts reach you at all, so a phone relay buys little.
+- **Ask and wait covers the real need.** When a step needs your OK, the agent asks on the phone and waits (②).
 
 
 The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.

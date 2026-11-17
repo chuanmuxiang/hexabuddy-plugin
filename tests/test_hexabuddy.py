@@ -96,6 +96,8 @@ class FakeMac:
         self.commands.append(command)
         if command[:3] == ['codex', 'mcp', 'add']:
             self.codex_mcp = {'url': command[command.index('--url') + 1], 'client': command[command.index('--oauth-client-id') + 1]}
+            config = self.home / ".codex/config.toml"   # Codex writes its table, as the real `codex mcp add` does
+            config.write_text((config.read_text() if config.exists() else '') + f'\n[mcp_servers.hexabuddy-buddy]\nurl = "{self.codex_mcp["url"]}"\n\n[mcp_servers.hexabuddy-buddy.oauth]\nclient_id = "{self.codex_mcp["client"]}"\n')
             assert env.get('CODEX_CA_CERTIFICATE'), 'codex add trusts the server CA'
         if command[1:3] == ['mcp', 'login']:
             assert self.approving, 'sign-in runs while the Mac approves it'
@@ -215,6 +217,8 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.mac.codex_mcp, {'url': SERVER + '/mcp', 'client': 'hexabuddy-codex.' + DESKTOP_ID})
         self.assertEqual(self.mac.signed_in, {'claude', 'codex'})
         self.assertTrue((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
+        self.assertIn('[mcp_servers.hexabuddy-buddy]\nurl = "' + SERVER + '/mcp"\ntool_timeout_sec = 600\n', (self.codex / 'config.toml').read_text(),
+                      'ask and wait: Codex may wait out a 50 s hold')
         self.assertIn('✓ claude hexabuddy-buddy: connected', output)
         self.assertIn('✓ codex hexabuddy-buddy: connected', output)
         self.assertIn('Phone switches: monitor on · vocabulary off', output)
@@ -235,6 +239,7 @@ class CommandTests(unittest.TestCase):
         config = (self.codex / 'config.toml').read_text()
         self.assertIn('[mcp_servers.hexabuddy-buddy]\nurl = "' + SERVER + '/mcp"', config)
         self.assertIn('client_id = "hexabuddy-codex.' + DESKTOP_ID + '"', config)
+        self.assertIn('tool_timeout_sec = 600', config)
         self.assertIn('codex: hooks and hexabuddy-buddy added; sign it in from codex: /mcp', output)
         with patch.object(setup, 'calling_agent', return_value='claude'):
             self.run_command('connect')
