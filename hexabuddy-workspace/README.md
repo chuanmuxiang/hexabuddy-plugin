@@ -3,9 +3,11 @@
 See your coding sessions on your phone: status and agent questions in the Hexabuddy app,
 plus **Translate → Buddy** for any selected word on your Mac.
 
-Requirements: macOS, the Hexabuddy app signed in on your phone, Python 3 (Xcode Command Line Tools) and `jq`.
-Translate → Buddy needs nothing more: no model key, LLM settings file or Pillow; your Hexabuddy server translates
-(it counts against your account's daily translation allowance).
+| Requirement | |
+|---|---|
+| Mac | macOS, Python 3 (Xcode Command Line Tools), `jq` |
+| Phone | the Hexabuddy app, signed in |
+| Translate → Buddy | nothing more: no model key, LLM settings or Pillow; your Hexabuddy server translates (counts against your daily translation allowance) |
 
 ## How it works
 
@@ -33,27 +35,13 @@ Translate → Buddy needs nothing more: no model key, LLM settings file or Pillo
   └─────────────────────────────┘   └───────────────────────┘   └─────────────────────────┘
 ```
 
-1. **Session status:** the agent's hooks run `report-status.sh`, which sends your prompt, the agent's reply and the
-   project name to your Hexabuddy server and exits at once.
 2. **Ask and wait:** when the agent needs your decision or OK, it calls `ask_human` over its own `hexabuddy-buddy` MCP
    connection and waits; you answer on the phone and it continues.
 3. **Translate → Buddy:** select text, right-click → Services → Translate → Buddy.
-4. **Permission prompts** stay in the terminal (below).
+4. **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
+   plugin never runs an extra process on your Mac.
 
-## Phone approvals: not yet
-
-Permission prompts are answered in the terminal on your Mac, not on the phone. The phone will approve them once an
-agent can send its permission prompts to an MCP server; the Hexabuddy app already has the Allow / Deny cards for it.
-
-Why not now:
-
-- **No extra process on your Mac.** Today Claude Code and Codex can only hand a permission prompt to something running
-  locally (a hook that waits for the phone, or a local channel process). This plugin starts nothing that keeps running:
-  each agent talks to Hexabuddy itself through its own `hexabuddy-buddy` MCP connection, and the hooks only report
-  status and exit at once. Simple, and nothing to break or clean up.
-- **Agents mostly run in automatic mode.** Few prompts reach you at all, so a phone relay buys little.
-- **Ask and wait covers the real need.** When a step needs your OK, the agent asks on the phone and waits (②).
-
+## Usage
 
 The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.
 
