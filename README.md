@@ -108,7 +108,7 @@ show on the phone.
 uninstall Hexabuddy
 ```
 
-## Usage
+## Tools
 
 ### Status (check every piece)
 
