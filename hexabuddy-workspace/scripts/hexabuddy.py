@@ -901,19 +901,19 @@ def disconnect(args):
     return 0 if cache_cleared else 1
 
 
-def monitor(args):
-    # Local switch: off → every hook stops on this Mac before any network call (hooks/config.py), so no session status,
+def sync(args):
+    # Local switch (privacy): off → every hook stops on this Mac before any network call (hooks/config.py), so no session status,
     # prompt or reply leaves the Mac. Questions (MCP) and Translate → Buddy are not affected. Saved in state.json.
     if args.state not in ('on', 'off'):
-        print(f'Monitor on this Mac: {"off" if _config.state().get("monitor") is False else "on"}')
+        print(f'Sync to phone: {"off" if _config.state().get("sync") is False else "on"}')
         return 0
     state = _config.state()
     if args.state == 'off':
-        state['monitor'] = False
+        state['sync'] = False
     else:
-        state.pop('monitor', None)
+        state.pop('sync', None)
     save_settings(state_path(), state, keep_backup=False)
-    print('✓ Monitor on this Mac: ' + ('off — hooks send nothing; questions and Translate → Buddy still work.'
+    print('✓ Sync to phone: ' + ('off — nothing leaves this Mac; questions and Translate → Buddy still work.'
                                         if args.state == 'off' else 'on — session status goes to your phone.'))
     return 0
 
@@ -929,7 +929,7 @@ def status(args):
         print(('✓ ' if ok else '✗ ') + text)
     report(bool(server), f'Server: {server or "not set"}')
     report_key(server, state, report)
-    print('  Monitor on this Mac: ' + ('off — hooks send nothing' if state.get('monitor') is False else 'on'))
+    print('  Sync to phone: ' + ('off — nothing leaves this Mac' if state.get('sync') is False else 'on'))
     for agent in found_agents():
         report_agent(agent, report)
     installed = quick_action_path().exists()
@@ -987,14 +987,14 @@ def report_agent(agent, report):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['connect', 'disconnect', 'status', 'monitor'])
-    parser.add_argument('state', nargs='?', choices=['on', 'off'], help='monitor: on or off (no value: show it)')
+    parser.add_argument('command', choices=['connect', 'disconnect', 'status', 'sync'])
+    parser.add_argument('state', nargs='?', choices=['on', 'off'], help='sync: on or off (no value: show it)')
     parser.add_argument('--server', help='connect: server URL (default: connection.json)')
     parser.add_argument('--ca-cert', help='connect: PEM CA certificate for that server')
     parser.add_argument('--name', default=socket.gethostname()[:80], help='connect: name shown on the phone')
     parser.add_argument('--api-key', action='store_true', help='connect: paste a key created on the phone instead of scanning')
     args = parser.parse_args(argv)
-    return {'connect': connect, 'disconnect': disconnect, 'status': status, 'monitor': monitor}[args.command](args)
+    return {'connect': connect, 'disconnect': disconnect, 'status': status, 'sync': sync}[args.command](args)
 
 
 if __name__ == '__main__':

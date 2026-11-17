@@ -93,19 +93,19 @@ class HookAuthorityTests(unittest.TestCase):
         bodies = [json.loads(b) for _, b in Stub.posts]
         self.assertEqual([b['detail'] for b in bodies], [t[:4000].rstrip('\n') for t in self.evil])   # verbatim as data ($(…) trims trailing newlines)
 
-    def test_monitor_off_on_this_mac_sends_nothing(self):
-        # `hexabuddy.py monitor off` (state.json monitor:false): the hook stops before any network call; on again → sends.
+    def test_sync_off_on_this_mac_sends_nothing(self):
+        # `hexabuddy.py sync off` (state.json sync:false): the hook stops before any network call; on again → sends.
         state = self.home / 'hb'; state.mkdir(); self.env['HEXABUDDY_HOME'] = str(state)
-        (state / 'state.json').write_text(json.dumps({'monitor': False}))
+        (state / 'state.json').write_text(json.dumps({'sync': False}))
         for event in ('SessionStart', 'UserPromptSubmit', 'Stop'):
             r = self.hook('report-status.sh', {'session_id': 's1', 'hook_event_name': event, 'prompt': 'secret prompt'})
             self.assertEqual((r.returncode, r.stderr), (0, ''))
         time.sleep(1)
-        self.assertEqual(Stub.posts, [], 'monitor off: nothing leaves the Mac')
+        self.assertEqual(Stub.posts, [], 'sync off: nothing leaves the Mac')
         (state / 'state.json').write_text(json.dumps({}))
         self.hook('report-status.sh', {'session_id': 's1', 'hook_event_name': 'UserPromptSubmit', 'prompt': 'hi'})
         self.wait_posts(1)
-        self.assertEqual(len(Stub.posts), 1, 'monitor on again: status is sent')
+        self.assertEqual(len(Stub.posts), 1, 'sync on again: status is sent')
 
     def test_session_id_is_never_executed(self):
         r = self.hook('report-status.sh', {'session_id': f'$(touch {self.pwn})', 'hook_event_name': 'Stop'})

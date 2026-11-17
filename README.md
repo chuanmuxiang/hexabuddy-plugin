@@ -118,21 +118,21 @@ macOS asks once to trust the Hexabuddy server certificate, for the server's addr
 Hexabuddy status
 ```
 
-**Monitor on this Mac: for privacy.** Working on something sensitive (client code, secrets in a prompt)? Turn
-monitoring off on the Mac and your prompts and the agent's replies **never leave your Mac**: the hooks stop before
+**Sync to phone: off for privacy.** Working on something sensitive (client code, secrets in a prompt)? Turn
+sync off on the Mac and your prompts and the agent's replies **never leave your Mac**: the hooks stop before
 any network call. (The phone's Monitor switch only hides sessions; the data would still be sent to the server.) Agent
-questions and Translate → Buddy still work, since you choose to use them. Turn it on again the same way.
+questions and Translate → Buddy still work, since you choose to use them. Turn it on again with `sync on`.
 
 **Claude Code**
 
 ```
-/hexabuddy-workspace:monitor off
+/hexabuddy-workspace:sync off
 ```
 
 **or Codex** (ask):
 
 ```
-Hexabuddy monitor off
+Hexabuddy sync off
 ```
 
 ### Step 4 — Disconnect before you uninstall
@@ -159,7 +159,7 @@ Vocabulary needs no switch: a word is saved only when you choose Translate → B
 
 | Data | When | Where |
 |---|---|---|
-| Session status, prompts and replies, project name | each agent event, while monitoring is on (`/hexabuddy-workspace:monitor`) | your Hexabuddy server account |
+| Session status, prompts and replies, project name | each agent event, while monitoring is on (`/hexabuddy-workspace:sync`) | your Hexabuddy server account |
 | Agent questions | when the agent calls `ask_human` | same |
 | Selected text | when you choose Translate → Buddy | your Hexabuddy server account: translated there, then shown as a card or spoken; kept in your vocabulary and weekly-report activity |
 
