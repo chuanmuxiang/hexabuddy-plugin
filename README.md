@@ -88,8 +88,8 @@ connect Hexabuddy
 
 It shows a QR code: scan it in the app with **Devices → Scan QR code**.
 
-If Claude Code is already connected, Codex can also sign in from its MCP settings: **hexabuddy-buddy → Authenticate**,
-then scan the QR code.
+**or Codex, if Claude Code is already connected**: in Codex's MCP settings choose **hexabuddy-buddy → Authenticate**, then
+scan the QR code.
 
 ### Step 3 — Uninstall (removes everything)
 
@@ -107,7 +107,9 @@ uninstall Hexabuddy
 
 ## Usage
 
-### Status: check every piece
+### Status (check every piece)
+
+Shows what is connected and what is missing.
 
 **Claude Code**
 
@@ -123,8 +125,7 @@ Hexabuddy status
 
 ### Sync to phone (off / on)
 
-For privacy, turn sync off and your prompts and the agent's replies never leave your Mac; turn it on again to see
-your sessions on the phone.
+For privacy: off keeps your prompts and the agent's replies on your Mac; on shows your sessions on the phone.
 
 
 **Claude Code**
@@ -147,11 +148,12 @@ Hexabuddy sync off
 Hexabuddy sync on
 ```
 
-### Translate → Buddy
+### Translate → Buddy (selected text to your buddy)
 
-Select text in any native app → right-click → **Services → Translate → Buddy**: a word becomes a card on your buddy
-and in the app's Vocab tab; longer text is spoken. Connect installs it; bind a hotkey in System Settings → Keyboard →
-Keyboard Shortcuts → Services → Text.
+A word becomes a card on your buddy and in the app's Vocab tab; longer text is spoken.
+
+**Any Mac app**: select text → right-click → **Services → Translate → Buddy** (a hotkey can be bound in System Settings →
+Keyboard → Keyboard Shortcuts → Services → Text).
 
 ## Notice
 
