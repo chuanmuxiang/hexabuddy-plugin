@@ -35,10 +35,6 @@ plus **Translate → Buddy** for any selected word on your Mac.
   └─────────────────────────────┘   └───────────────────────┘   └─────────────────────────┘
 ```
 
-3. **Translate → Buddy:** select text, right-click → Services → Translate → Buddy.
-4. **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
-   plugin never runs an extra process on your Mac.
-
 ## What is stored on your Mac
 
 | Item | Holds |
@@ -94,16 +90,6 @@ one agent never waits on another.
 connect Hexabuddy
 ```
 
-> **Note:** in Codex, once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex), you can
-> instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code the page shows.
->
-> **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
-> trust the 6 Hexabuddy hooks; until then Codex sessions do not show on the phone. `/hexabuddy-workspace:status` (or
-> asking Codex "Hexabuddy status") shows `Codex hooks trusted: 6/6` when done.
-
-macOS asks once to trust the Hexabuddy server certificate, for the server's address only. Connect also installs
-**Translate → Buddy**: select text in any native app → right-click → **Services → Translate → Buddy**.
-
 ### Step 3 — Check every piece
 
 **Claude Code**
@@ -118,8 +104,7 @@ macOS asks once to trust the Hexabuddy server certificate, for the server's addr
 Hexabuddy status
 ```
 
-**Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac (`sync on` turns it back on). Vocabulary needs no switch: a word is saved only when you choose Translate → Buddy
-yourself.
+**Sync to phone** (off / on)
 
 **Claude Code**
 
@@ -155,10 +140,21 @@ Hexabuddy sync on
 disconnect Hexabuddy
 ```
 
-One command removes everything: it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
-the key, the CA trust and Translate → Buddy; there is nothing left to uninstall. Lost the Mac? On the phone,
-**Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
+## Notice
 
+- **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
+  trust the 6 Hexabuddy hooks; until then Codex sessions do not show on the phone (status shows `Codex hooks trusted: 6/6`).
+- **Codex sign-in another way:** once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex),
+  you can instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code it shows.
+- **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
+- **Translate → Buddy:** connect installs it; select text in any native app → right-click → **Services → Translate → Buddy**.
+- **Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac.
+  Vocabulary needs no switch: a word is saved only when you choose Translate → Buddy yourself.
+- **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
+  plugin never runs an extra process on your Mac.
+- **Disconnect removes everything:** it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
+  the key, the CA trust and Translate → Buddy; nothing is left to uninstall. Lost the Mac? On the phone,
+  **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
 ## License
 
