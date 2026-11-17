@@ -39,6 +39,20 @@ plus **Translate → Buddy** for any selected word on your Mac.
 4. **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
    plugin never runs an extra process on your Mac.
 
+## What is stored on your Mac
+
+| Item | Holds |
+|---|---|
+| Login Keychain item `com.hexabuddy.desktop-api-key` (account: server URL) | the desktop key, the only secret |
+| `~/Library/Application Support/Hexabuddy/state.json` | server, desktop id, `trust` (what connect added, and the server host the CA is trusted for) |
+| `~/Library/Application Support/Hexabuddy/server.pem` | copy of the public server CA |
+| `~/Library/Application Support/Hexabuddy/hooks/`, `translate-to-buddy/` | copies Codex and the Quick Action run |
+| Claude Code / Codex configs | plugin, hooks and their Codex trust records, `hexabuddy-buddy`, `NODE_EXTRA_CA_CERTS` |
+| Login Keychain trust, `~/Library/Services` | server CA trusted for SSL to the server host only (if connect added it), Translate → Buddy Quick Action |
+
+Disconnect revokes the key on the server, deletes the Keychain item and the whole folder, and removes the entries it
+added to the client configs, the CA trust and the Quick Action. No other file is read or written.
+
 ## Usage
 
 The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.
@@ -145,20 +159,6 @@ One command removes everything: it revokes this Mac on the server and removes th
 the key, the CA trust and Translate → Buddy; there is nothing left to uninstall. Lost the Mac? On the phone,
 **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
-
-## What is stored on your Mac
-
-| Item | Holds |
-|---|---|
-| Login Keychain item `com.hexabuddy.desktop-api-key` (account: server URL) | the desktop key, the only secret |
-| `~/Library/Application Support/Hexabuddy/state.json` | server, desktop id, `trust` (what connect added, and the server host the CA is trusted for) |
-| `~/Library/Application Support/Hexabuddy/server.pem` | copy of the public server CA |
-| `~/Library/Application Support/Hexabuddy/hooks/`, `translate-to-buddy/` | copies Codex and the Quick Action run |
-| Claude Code / Codex configs | plugin, hooks and their Codex trust records, `hexabuddy-buddy`, `NODE_EXTRA_CA_CERTS` |
-| Login Keychain trust, `~/Library/Services` | server CA trusted for SSL to the server host only (if connect added it), Translate → Buddy Quick Action |
-
-Disconnect revokes the key on the server, deletes the Keychain item and the whole folder, and removes the entries it
-added to the client configs, the CA trust and the Quick Action. No other file is read or written.
 
 ## License
 
