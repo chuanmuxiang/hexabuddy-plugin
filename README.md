@@ -35,8 +35,6 @@ plus **Translate → Buddy** for any selected word on your Mac.
   └─────────────────────────────┘   └───────────────────────┘   └─────────────────────────┘
 ```
 
-2. **Ask and wait:** when the agent needs your decision or OK, it calls `ask_human` over its own `hexabuddy-buddy` MCP
-   connection and waits; you answer on the phone and it continues.
 3. **Translate → Buddy:** select text, right-click → Services → Translate → Buddy.
 4. **Permission prompts** stay in the terminal: phone approvals come once an agent can send them over MCP, so the
    plugin never runs an extra process on your Mac.
