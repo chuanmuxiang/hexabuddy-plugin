@@ -50,6 +50,10 @@ connect Hexabuddy
 
 > **Note:** in Codex, once Claude Code is connected (its connect already added `hexabuddy-buddy` to Codex), you can
 > instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code the page shows.
+>
+> **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
+> trust the 7 Hexabuddy hooks; until then Codex sessions do not show on the phone. `/hexabuddy-workspace:status` (or
+> asking Codex "Hexabuddy status") shows `Codex hooks trusted: 7/7` when done.
 
 macOS asks once to trust the Hexabuddy server certificate, for the server's address only. Connect also installs
 **Translate → Buddy**: select text in any native app → right-click → **Services → Translate → Buddy**.
