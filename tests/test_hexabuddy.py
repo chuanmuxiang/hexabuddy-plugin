@@ -171,7 +171,6 @@ class CommandTests(unittest.TestCase):
              patch.object(setup, 'check_remote_mcp'), \
              patch.object(setup, 'server_certificate', return_value=BUNDLED_CA.read_text()), \
              patch.object(setup, 'connection_opener', side_effect=AssertionError('no real network in tests')), \
-             patch.object(setup, 'report_switches', side_effect=lambda *a: print('  Phone switches: monitor on · vocabulary off')), \
              patch.object(setup, 'key_state', side_effect=lambda server, key, ca=None: 'accepted' if key in self.mac.keychain.values() or key == KEY else 'rejected'), \
              redirect_stdout(output):
             code = setup.main(list(argv))
@@ -221,7 +220,7 @@ class CommandTests(unittest.TestCase):
                       'ask and wait: Codex may wait out a 50 s hold')
         self.assertIn('✓ claude hexabuddy-buddy: connected', output)
         self.assertIn('✓ codex hexabuddy-buddy: connected', output)
-        self.assertIn('Phone switches: monitor on · vocabulary off', output)
+        self.assertNotIn('Phone switches', output)   # only the Mac decides sync (2026-11-17)
         self.assertIn('✗ Codex hooks trusted: 0/6', output)  # Codex asks the person to review new hooks
         self.assertEqual(code, 1)
         self.assertNotIn(KEY, output)
@@ -317,6 +316,10 @@ class CommandTests(unittest.TestCase):
         self.assertIsNone(self.mac.codex_mcp)
         self.assertIn(['claude', 'mcp', 'logout', 'hexabuddy-buddy'], self.mac.commands)
         self.assertIn(['codex', 'mcp', 'logout', 'hexabuddy-buddy'], self.mac.commands)
+        # One command removes everything: the plugin itself too, in both clients (no separate uninstall).
+        self.assertIn(['claude', 'plugin', 'marketplace', 'remove', 'hexabuddy-plugin'], self.mac.commands)
+        self.assertIn(['codex', 'plugin', 'remove', 'hexabuddy-workspace@hexabuddy-plugin'], self.mac.commands)
+        self.assertIn(['codex', 'plugin', 'marketplace', 'remove', 'hexabuddy-plugin'], self.mac.commands)
         self.assertFalse(self.mac.plugin)
         self.assertNotIn(['claude', 'plugin', 'uninstall', 'workspace@another-marketplace'], self.mac.commands)
         self.assertFalse(self.mac.trusted)

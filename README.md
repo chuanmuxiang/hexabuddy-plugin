@@ -104,12 +104,17 @@ macOS asks once to trust the Hexabuddy server certificate, for the server's addr
 Hexabuddy status
 ```
 
-**Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac (`sync on` turns it back on).
+**Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac (`sync on` turns it back on). Vocabulary needs no switch: a word is saved only when you choose Translate → Buddy
+yourself.
 
 **Claude Code**
 
 ```
 /hexabuddy-workspace:sync off
+```
+
+```
+/hexabuddy-workspace:sync on
 ```
 
 **or Codex** (ask):
@@ -118,7 +123,11 @@ Hexabuddy status
 Hexabuddy sync off
 ```
 
-### Step 4 — Disconnect before you uninstall
+```
+Hexabuddy sync on
+```
+
+### Step 4 — Disconnect (removes everything)
 
 **Claude Code**
 
@@ -132,17 +141,16 @@ Hexabuddy sync off
 disconnect Hexabuddy
 ```
 
-Uninstalling the plugin does **not** do this: Claude Code and Codex run nothing when a plugin is uninstalled, so the
-key, hooks, CA trust and Quick Action would stay. Disconnect first, then uninstall. Lost the Mac? On the phone,
+One command removes everything: it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
+the key, the CA trust and Translate → Buddy; there is nothing left to uninstall. Lost the Mac? On the phone,
 **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
-Vocabulary needs no switch: a word is saved only when you choose Translate → Buddy yourself.
 
 ## What is sent
 
 | Data | When | Where |
 |---|---|---|
-| Session status, prompts and replies, project name | each agent event, while monitoring is on (`/hexabuddy-workspace:sync`) | your Hexabuddy server account |
+| Session status, prompts and replies, project name | each agent event, while sync is on (`/hexabuddy-workspace:sync on`) | your Hexabuddy server account |
 | Agent questions | when the agent calls `ask_human` | same |
 | Selected text | when you choose Translate → Buddy | your Hexabuddy server account: translated there, then shown as a card or spoken; kept in your vocabulary and weekly-report activity |
 

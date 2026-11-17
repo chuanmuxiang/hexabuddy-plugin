@@ -695,12 +695,15 @@ def clear_codex_app_cache():
 
 
 def remove_codex():
-    # Hooks, their trust records, MCP sign-in and MCP entry.
+    # Plugin, marketplace, hooks, their trust records, MCP sign-in and MCP entry.
     removed = configure_codex_hooks(remove=True)
     records = remove_codex_trust_records(set(removed))
     run(['codex', 'mcp', 'logout', MCP_NAME], check=False)
     run(['codex', 'mcp', 'remove', MCP_NAME], check=False)
-    print(f'✓ Codex: {len(removed)} hooks, {records} trust records and hexabuddy-buddy removed.')
+    # The plugin itself too: disconnect is the one command that removes everything (no separate uninstall).
+    run(['codex', 'plugin', 'remove', 'hexabuddy-workspace@hexabuddy-plugin'], check=False)
+    run(['codex', 'plugin', 'marketplace', 'remove', 'hexabuddy-plugin'], check=False)
+    print(f'✓ Codex: plugin, {len(removed)} hooks, {records} trust records and hexabuddy-buddy removed.')
 
 
 # ── MCP: the same name, URL, client-id shape and CA trust in both clients ──
@@ -954,21 +957,6 @@ def report_key(server, state, report):
                 'rejected': 'Desktop key revoked or expired. Run connect again.',
                 'unreachable': 'Server unreachable. Check the address, certificate and network.'}
     report(answer == 'accepted', messages[answer])
-    if answer == 'accepted':
-        report_switches(server, api_key, ca_cert)
-
-
-def report_switches(server, api_key, ca_cert):
-    # This Mac's switches as set on the phone (GET /desktop/self); informational.
-    request = Request(server + '/desktop/self', headers={'Authorization': 'Bearer ' + api_key})
-    try:
-        with connection_opener(ca_cert).open(request, timeout=10) as response:
-            switches = json.load(response)
-    except (HTTPError, URLError, TimeoutError, OSError, ValueError, SetupError):
-        return
-    monitor = 'off' if switches.get('monitor') is False else 'on'
-    vocabulary = 'off' if switches.get('vocabulary') is False else 'on'
-    print(f'  Phone switches: monitor {monitor} · vocabulary {vocabulary}')
 
 
 def report_agent(agent, report):
