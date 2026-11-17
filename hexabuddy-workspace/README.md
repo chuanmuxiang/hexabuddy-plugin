@@ -104,10 +104,7 @@ macOS asks once to trust the Hexabuddy server certificate, for the server's addr
 Hexabuddy status
 ```
 
-**Sync to phone: off for privacy.** Working on something sensitive (client code, secrets in a prompt)? Turn
-sync off on the Mac and your prompts and the agent's replies **never leave your Mac**: the hooks stop before
-any network call. (The phone's Monitor switch only hides sessions; the data would still be sent to the server.) Agent
-questions and Translate → Buddy still work, since you choose to use them. Turn it on again with `sync on`.
+**Sync to phone:** for privacy, turn sync off and your prompts and the agent's replies never leave your Mac (`sync on` turns it back on).
 
 **Claude Code**
 
