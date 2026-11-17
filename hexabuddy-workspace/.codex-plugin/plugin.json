@@ -1,7 +1,7 @@
 {
   "name": "hexabuddy-workspace",
-  "version": "0.1.4",
-  "description": "Watch and approve Codex and Claude Code sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy.",
+  "version": "0.1.5",
+  "description": "Watch Codex and Claude Code sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy.",
   "author": {
     "name": "hexabuddy"
   },
@@ -10,7 +10,6 @@
   "license": "MIT",
   "keywords": [
     "hexabuddy",
-    "approvals",
     "phone",
     "sessions",
     "mcp"
@@ -19,7 +18,7 @@
   "interface": {
     "displayName": "Hexabuddy",
     "shortDescription": "Your coding sessions on your phone",
-    "longDescription": "Connect this Mac to the Hexabuddy app with one phone scan. Session status and approvals appear on the phone, agent questions are answered there, and Translate → Buddy sends a selected word to your desk buddy. Disconnect removes everything again.",
+    "longDescription": "Connect this Mac to the Hexabuddy app with one phone scan. Session status appears on the phone, agent questions are answered there, and Translate → Buddy sends a selected word to your desk buddy. Disconnect removes everything again.",
     "developerName": "hexabuddy",
     "category": "Productivity",
     "capabilities": [

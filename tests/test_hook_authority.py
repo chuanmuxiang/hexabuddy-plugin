@@ -1,9 +1,8 @@
 """S-05 on the Mac: text the plugin hooks carry (prompts, tool inputs, replies, server answers) is data, never an action.
 
-report-status.sh and approve.sh run against a loopback stub server with the desktop key from the environment. Shell
-syntax in a prompt, a tool command, a session id or a server reply must never run; the approval hook allows a tool
-only on the exact decision "allow" for its own request, and anything else (unknown words, another request, a menu
-answer carrying commands) never becomes an allow. No real server, Keychain or ~/.hexabuddy is touched.
+report-status.sh runs against a loopback stub server with the desktop key from the environment. Shell syntax in a
+prompt, a tool command or a session id must never run. No permission hook ships (permission prompts stay in the
+terminal, 2026-11-17). No real server, Keychain or ~/.hexabuddy is touched.
 """
 import json
 import os
@@ -100,45 +99,10 @@ class HookAuthorityTests(unittest.TestCase):
         self.wait_posts(1, 3); time.sleep(0.5)
         self.assertFalse(self.pwn.exists())
 
-    def approve(self, tool_input, decision=None):
-        if decision is not None:
-            Stub.decision = decision
-        return self.hook('approve.sh', {'session_id': 's1', 'tool_name': 'Bash', 'tool_input': tool_input,
-                                        'permission_suggestions': []})
-
-    def emitted(self, r):
-        return json.loads(r.stdout)['hookSpecificOutput']['decision'] if r.stdout.strip() else None
-
-    def test_exact_allow_for_its_own_request_is_the_only_allow(self):
-        r = self.approve({'command': 'ls'})
-        self.assertEqual(self.emitted(r), {'behavior': 'allow'})                     # positive control
-        for word in ['ALLOW', 'allow ', 'yes', 'allow_always', '', None, ['allow'], {'behavior': 'allow'}]:
-            # ('allow\n' reads as allow: $(…) trims trailing newlines from the server's own decision; not a bypass)
-            r = self.approve({'command': 'ls'}, {'decision': word})
-            self.assertNotEqual((self.emitted(r) or {}).get('behavior'), 'allow', f'{word!r} became an allow')
-
-    def test_tool_input_shell_text_is_forwarded_not_run(self):
-        for text in self.evil:
-            r = self.approve({'command': text, 'file_path': text}, {'decision': 'deny'})
-            self.assertEqual(self.emitted(r), {'behavior': 'deny'})
-        self.assertFalse(self.pwn.exists(), 'shell text in a tool input ran')
-        sent = [json.loads(b)['tool_input']['command'] for p, b in Stub.posts if p.endswith('/approval-request')]
-        self.assertEqual(sent, self.evil)
-
-    def test_menu_answer_is_a_deny_message_never_an_action(self):
-        for text in self.evil:
-            r = self.approve({'command': 'ls'}, {'decision': 'answer', 'answer': text})
-            d = self.emitted(r)
-            self.assertEqual(d['behavior'], 'deny')
-            self.assertTrue(d['message'].startswith('The user answered via Hexabuddy: '))
-            self.assertIn(f'touch {self.pwn}', d['message'])                          # carried as text
-        self.assertFalse(self.pwn.exists(), 'a phone answer ran as a command')
-        self.assertFalse((self.project / '.claude/settings.local.json').exists(), 'an answer wrote an allow rule')
-
-    def test_reply_text_from_the_server_is_never_run(self):
-        r = self.approve({'command': 'ls'}, {'decision': f'$(touch {self.pwn})'})
-        self.assertNotEqual((self.emitted(r) or {}).get('behavior'), 'allow')
-        self.assertFalse(self.pwn.exists())
+    def test_no_permission_hook_ships(self):
+        # Permission prompts stay in the terminal (2026-11-17): no approve.sh, no PermissionRequest hook for either agent.
+        self.assertFalse((HOOKS / 'approve.sh').exists())
+        self.assertNotIn('PermissionRequest', json.loads((HOOKS / 'hooks.json').read_text())['hooks'])
 
 
 if __name__ == '__main__':

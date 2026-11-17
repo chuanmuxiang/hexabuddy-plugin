@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared config + helpers for Hexabuddy hooks.
-# Sourced by report-status.sh, approve.sh.
+# Sourced by report-status.sh.
 #
 # config.py resolves the connection (environment → state.json in the Hexabuddy folder →
 # the bundled connection.json) and the desktop key (login Keychain). Not connected → the

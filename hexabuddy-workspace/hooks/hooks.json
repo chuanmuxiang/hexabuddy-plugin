@@ -9,9 +9,6 @@
     "PreToolUse": [
       { "matcher": "*", "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/report-status.sh\"" }] }
     ],
-    "PermissionRequest": [
-      { "matcher": "*", "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/approve.sh\"" }] }
-    ],
     "PostToolUse": [
       { "matcher": "*", "hooks": [{ "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/report-status.sh\"" }] }
     ],

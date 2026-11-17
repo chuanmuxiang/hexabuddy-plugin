@@ -3,15 +3,14 @@
 | Field | Text |
 |---|---|
 | Name | Hexabuddy |
-| Short description | Your coding sessions on your phone: status, approvals and questions |
+| Short description | Your coding sessions on your phone: status and questions |
 | Category | Productivity (Codex) · Developer tools (Claude) |
-| Keywords | phone, approvals, sessions, mcp, notifications |
+| Keywords | phone, sessions, mcp, notifications |
 
 ## Long description
 
 Hexabuddy puts Claude Code and Codex on your phone. Connect once with a single QR scan and every session shows its
-status in the Hexabuddy app; permission prompts can be approved from the phone while you watch a session, and agents
-can ask you questions there through the `hexabuddy-buddy` MCP server. Translate → Buddy sends any selected word on
+status in the Hexabuddy app, and agents can ask you questions there through the `hexabuddy-buddy` MCP server. Translate → Buddy sends any selected word on
 your Mac to your desk buddy as a flashcard. Per-Mac switches on the phone turn monitoring or vocabulary cards off,
 and Disconnect removes everything — on the Mac and on the server.
 

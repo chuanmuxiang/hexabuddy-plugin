@@ -1,13 +1,25 @@
 # Hexabuddy plugin for Claude Code and Codex
 
-See your coding sessions on your phone: status, approvals and agent questions in the Hexabuddy app,
+See your coding sessions on your phone: status and agent questions in the Hexabuddy app,
 plus **Translate → Buddy** for any selected word on your Mac.
 
 Requirements: macOS, the Hexabuddy app signed in on your phone, Python 3 (Xcode Command Line Tools) and `jq`.
 Translate → Buddy needs nothing more: no model key, LLM settings file or Pillow; your Hexabuddy server translates
 (it counts against your account's daily translation allowance).
 
-## Usage
+## Phone approvals: not yet
+
+Permission prompts are answered in the terminal on your Mac, not on the phone. The phone will approve them once an
+agent can send its permission prompts to an MCP server; the Hexabuddy app already has the Allow / Deny cards for it.
+
+Why not now:
+
+- **No extra process on your Mac.** Today Claude Code and Codex can only hand a permission prompt to something running
+  locally (a hook that waits for the phone, or a local channel process). This plugin starts nothing that keeps running:
+  each agent talks to Hexabuddy itself through its own `hexabuddy-buddy` MCP connection, and the hooks only report
+  status and exit at once. Simple, and nothing to break or clean up.
+- **Agents mostly run in automatic mode.** Few prompts reach you at all, so a phone relay buys little.
+
 
 The same steps are in the app: **Devices → How to connect a Mac**, each command with a Copy button.
 
@@ -52,8 +64,8 @@ connect Hexabuddy
 > instead choose **hexabuddy-buddy → Authenticate** in Codex's MCP settings and scan the QR code the page shows.
 >
 > **Codex hook trust:** Codex runs a new hook only after you trust it. After connecting, open `/hooks` in Codex and
-> trust the 7 Hexabuddy hooks; until then Codex sessions do not show on the phone. `/hexabuddy-workspace:status` (or
-> asking Codex "Hexabuddy status") shows `Codex hooks trusted: 7/7` when done.
+> trust the 6 Hexabuddy hooks; until then Codex sessions do not show on the phone. `/hexabuddy-workspace:status` (or
+> asking Codex "Hexabuddy status") shows `Codex hooks trusted: 6/6` when done.
 
 macOS asks once to trust the Hexabuddy server certificate, for the server's address only. Connect also installs
 **Translate → Buddy**: select text in any native app → right-click → **Services → Translate → Buddy**.
@@ -90,14 +102,13 @@ Uninstalling the plugin does **not** do this: Claude Code and Codex run nothing 
 key, hooks, CA trust and Quick Action would stay. Disconnect first, then uninstall. Lost the Mac? On the phone,
 **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
-On the phone, each Mac also has two switches: **Monitor sessions and approvals** and **Save vocabulary cards**.
+On the phone, each Mac also has two switches: **Monitor sessions** and **Save vocabulary cards**.
 
 ## What is sent
 
 | Data | When | Where |
 |---|---|---|
 | Session status, prompts and replies, project name | each agent event, while monitoring is on | your Hexabuddy server account |
-| Permission requests | only while the phone app watches that session | same |
 | Agent questions | when the agent calls `ask_human` | same |
 | Selected text | when you choose Translate → Buddy | your Hexabuddy server account: translated there, then shown as a card or spoken; kept in your vocabulary and weekly-report activity |
 
@@ -109,7 +120,6 @@ On the phone, each Mac also has two switches: **Monitor sessions and approvals**
 | `~/Library/Application Support/Hexabuddy/state.json` | server, desktop id, `trust` (what connect added, and the server host the CA is trusted for) |
 | `~/Library/Application Support/Hexabuddy/server.pem` | copy of the public server CA |
 | `~/Library/Application Support/Hexabuddy/hooks/`, `translate-to-buddy/` | copies Codex and the Quick Action run |
-| `~/Library/Application Support/Hexabuddy/` logs | `approve.log` |
 | Claude Code / Codex configs | plugin, hooks and their Codex trust records, `hexabuddy-buddy`, `NODE_EXTRA_CA_CERTS` |
 | Login Keychain trust, `~/Library/Services` | server CA trusted for SSL to the server host only (if connect added it), Translate → Buddy Quick Action |
 

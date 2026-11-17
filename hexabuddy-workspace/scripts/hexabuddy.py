@@ -41,7 +41,7 @@ AGENTS = ('claude', 'codex')
 MCP_NAME = 'hexabuddy-buddy'
 KEY_FORMAT = re.compile(r'hb_desktop_[a-f0-9]{64}')
 DESKTOP_ID = re.compile(r'[a-f0-9]{32}')
-CODEX_EVENTS = ('SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop', 'PermissionRequest')
+CODEX_EVENTS = ('SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop')  # status only: permission prompts stay in the terminal
 
 
 class SetupError(ValueError):
@@ -500,7 +500,8 @@ def remove_claude():
 # ── Codex ──
 
 def is_our_hook(hook):
-    # Our Codex hooks run `env HEXABUDDY_AGENT=codex <dir>/hooks/report-status.sh|approve.sh`, wherever <dir> was.
+    # Our Codex hooks run `env HEXABUDDY_AGENT=codex <dir>/hooks/report-status.sh`, wherever <dir> was; approve.sh is
+    # still recognised so connect and disconnect remove it from Macs set up before phone approvals were removed.
     try:
         command = shlex.split(hook.get('command', ''))
     except ValueError:
@@ -544,13 +545,9 @@ def configure_codex_hooks(*, remove=False):
 
 def codex_hook_group(event):
     # Our hook group for one Codex event.
-    approval = event == 'PermissionRequest'
-    script = _config.home() / 'hooks' / ('approve.sh' if approval else 'report-status.sh')
-    hook = {'type': 'command', 'command': f'env HEXABUDDY_AGENT=codex {shlex.quote(str(script))}'}
-    if approval:
-        hook['timeout'] = 100
-    group = {'hooks': [hook]}
-    if approval or event in ('PreToolUse', 'PostToolUse'):
+    script = _config.home() / 'hooks' / 'report-status.sh'
+    group = {'hooks': [{'type': 'command', 'command': f'env HEXABUDDY_AGENT=codex {shlex.quote(str(script))}'}]}
+    if event in ('PreToolUse', 'PostToolUse'):
         group['matcher'] = '.*'
     return group
 

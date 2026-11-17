@@ -207,7 +207,7 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(json.loads((self.home / '.claude/settings.json').read_text())['env']['NODE_EXTRA_CA_CERTS'], ca)
         self.assertTrue(self.mac.trusted)
         self.assertTrue(self.mac.plugin)
-        self.assertEqual(len(self.our_hooks()), 7)
+        self.assertEqual(len(self.our_hooks()), 6)
         self.assertTrue((self.state_home / 'hooks/report-status.sh').exists())
         self.assertTrue(all(shlex.split(h['command'])[-1].startswith(str(self.state_home / 'hooks')) for h in self.our_hooks()))
         self.assertIn(['claude', 'plugin', 'marketplace', 'add', str(setup.PLUGIN.parent)], self.mac.commands)
@@ -218,7 +218,7 @@ class CommandTests(unittest.TestCase):
         self.assertIn('✓ claude hexabuddy-buddy: connected', output)
         self.assertIn('✓ codex hexabuddy-buddy: connected', output)
         self.assertIn('Phone switches: monitor on · vocabulary off', output)
-        self.assertIn('✗ Codex hooks trusted: 0/7', output)  # Codex asks the person to review new hooks
+        self.assertIn('✗ Codex hooks trusted: 0/6', output)  # Codex asks the person to review new hooks
         self.assertEqual(code, 1)
         self.assertNotIn(KEY, output)
 

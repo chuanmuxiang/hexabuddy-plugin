@@ -10,7 +10,7 @@
     {
       "name": "hexabuddy-workspace",
       "source": "./hexabuddy-workspace",
-      "description": "Watch and approve Claude Code and Codex sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy."
+      "description": "Watch Claude Code and Codex sessions from the Hexabuddy phone app, answer agent questions there, and send selected words to your buddy."
     }
   ]
 }
