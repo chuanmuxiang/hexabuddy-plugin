@@ -146,14 +146,6 @@ the key, the CA trust and Translate → Buddy; there is nothing left to uninstal
 **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
 
-## What is sent
-
-| Data | When | Where |
-|---|---|---|
-| Session status, prompts and replies, project name | each agent event, while sync is on (`/hexabuddy-workspace:sync on`) | your Hexabuddy server account |
-| Agent questions | when the agent calls `ask_human` | same |
-| Selected text | when you choose Translate → Buddy | your Hexabuddy server account: translated there, then shown as a card or spoken; kept in your vocabulary and weekly-report activity |
-
 ## What is stored on your Mac
 
 | Item | Holds |
