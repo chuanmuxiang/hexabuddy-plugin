@@ -163,9 +163,6 @@ Keyboard → Keyboard Shortcuts → Services → Text).
 - **Server certificate:** macOS asks once to trust the Hexabuddy server certificate, for the server's address only.
 - **Permission prompts are not sent to the phone**, because the plugin runs no extra process on your Mac (today an
   agent can hand them only to a local process). They stay in the terminal until an agent can send them over MCP.
-- **Uninstall removes everything:** it revokes this Mac on the server and removes the plugin, hooks, `hexabuddy-buddy`,
-  the key, the CA trust and Translate → Buddy; nothing is left to uninstall. Lost the Mac? On the phone,
-  **Devices → this Mac → Disconnect this Mac** revokes it even when the Mac is offline.
 
 ## License
 
