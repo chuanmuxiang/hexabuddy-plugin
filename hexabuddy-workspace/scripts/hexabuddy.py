@@ -41,7 +41,7 @@ AGENTS = ('claude', 'codex')
 MCP_NAME = 'hexabuddy-buddy'
 KEY_FORMAT = re.compile(r'hb_desktop_[a-f0-9]{64}')
 DESKTOP_ID = re.compile(r'[a-f0-9]{32}')
-CODEX_TOOL_TIMEOUT = 600  # s; well above the server's 50 s hold per ask_human / get_human_answer call
+CODEX_TOOL_TIMEOUT = 600  # s; well above the server's 25 s hold per ask_human / get_human_answer call
 CODEX_EVENTS = ('SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop')  # status only: permission prompts stay in the terminal
 
 
@@ -544,6 +544,8 @@ def configure_codex_hooks(*, remove=False):
             hooks.setdefault(event, []).append(codex_hook_group(event))
     if not remove or path.exists():
         save_settings(path, dict(settings, hooks=hooks))
+    if not remove:
+        remove_codex_trust_records(set())   # stale records of the plugin's own hooks file (BUG-037)
     return removed
 
 
@@ -589,7 +591,7 @@ def codex_trust_records():
 
 
 def set_codex_tool_timeout():
-    # Ask and wait (server.md §4.8): one ask_human call holds up to 50 s, close to Codex's default 60 s tool timeout. Set
+    # Ask and wait (server.md §4.8): one ask_human call holds up to 25 s; Codex's default tool timeout is 60 s. Set
     # tool_timeout_sec in the hexabuddy-buddy table (backup first, must parse); nothing else in config.toml changes.
     path = codex_home() / 'config.toml'
     if not path.exists():
@@ -645,15 +647,20 @@ def add_codex_entry_quietly(server, desktop_id):
     path.write_text(body)
 
 
+PLUGIN_HOOK_RECORD = 'hexabuddy-workspace@'   # records of hooks Codex once loaded from the plugin itself (BUG-037)
+
+
 def remove_codex_trust_records(ids):
-    # Drop the trust-record tables of our removed hooks from config.toml (backup first, result must parse).
+    # Drop the trust-record tables of our removed hooks from config.toml (backup first, result must parse), and any
+    # record of the plugin's own hooks file, which Codex no longer loads (BUG-037).
     path = codex_home() / 'config.toml'
-    if not ids or not path.exists():
+    if not path.exists() or (not ids and PLUGIN_HOOK_RECORD not in path.read_text()):
         return 0
     kept, skipping, dropped = [], False, 0
     for line in path.read_text().splitlines(keepends=True):
         if line.lstrip().startswith('['):
-            skipping = trust_record_id(line) in ids
+            record = trust_record_id(line)
+            skipping = record in ids or (record or '').startswith(PLUGIN_HOOK_RECORD)
             dropped += skipping
         if not skipping:
             kept.append(line)

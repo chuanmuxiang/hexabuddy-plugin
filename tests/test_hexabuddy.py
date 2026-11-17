@@ -217,7 +217,7 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.mac.signed_in, {'claude', 'codex'})
         self.assertTrue((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
         self.assertIn('[mcp_servers.hexabuddy-buddy]\nurl = "' + SERVER + '/mcp"\ntool_timeout_sec = 600\n', (self.codex / 'config.toml').read_text(),
-                      'ask and wait: Codex may wait out a 50 s hold')
+                      'ask and wait: Codex may wait out a hold')
         self.assertIn('✓ claude hexabuddy-buddy: connected', output)
         self.assertIn('✓ codex hexabuddy-buddy: connected', output)
         self.assertNotIn('Phone switches', output)   # only the Mac decides sync (2026-11-17)
@@ -279,6 +279,16 @@ class CommandTests(unittest.TestCase):
         self.run_command('sync', 'on')
         self.assertNotIn('sync', self.state())
         self.assertIn('Sync to phone: on', self.run_command('status')[1])
+
+    def test_connect_drops_trust_records_of_plugin_hooks(self):
+        # BUG-037: records of hooks Codex once loaded from the plugin's own hooks file go; other records stay.
+        config = self.codex / 'config.toml'
+        config.write_text('[hooks.state."hexabuddy-workspace@hexabuddy-plugin:hooks/hooks.json:stop:0:0"]\ntrusted_hash = "x"\n\n'
+                          '[hooks.state."other@market:hooks/hooks.json:stop:0:0"]\ntrusted_hash = "y"\n')
+        self.run_command('connect')
+        text = config.read_text()
+        self.assertNotIn('hexabuddy-workspace@hexabuddy-plugin:hooks/hooks.json', text)
+        self.assertIn('other@market:hooks/hooks.json', text)
 
     def test_connect_again_changes_nothing(self):
         self.connect_and_trust()

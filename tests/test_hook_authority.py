@@ -116,7 +116,16 @@ class HookAuthorityTests(unittest.TestCase):
     def test_no_permission_hook_ships(self):
         # Permission prompts stay in the terminal (2026-11-17): no approve.sh, no PermissionRequest hook for either agent.
         self.assertFalse((HOOKS / 'approve.sh').exists())
-        self.assertNotIn('PermissionRequest', json.loads((HOOKS / 'hooks.json').read_text())['hooks'])
+        self.assertNotIn('PermissionRequest', json.loads((HOOKS.parent / 'claude-hooks.json').read_text())['hooks'])
+
+    def test_codex_finds_no_plugin_hooks(self):
+        # BUG-037: Codex auto-loads a plugin's hooks/hooks.json, which doubled every Codex event (and reported it as
+        # Claude Code). Claude's hooks live in claude-hooks.json, named by the Claude manifest; Codex keeps only the
+        # 6 hooks connect writes into ~/.codex/hooks.json (HEXABUDDY_AGENT=codex).
+        self.assertFalse((HOOKS / 'hooks.json').exists())
+        manifest = json.loads((HOOKS.parent / '.claude-plugin/plugin.json').read_text())
+        self.assertEqual(manifest['hooks'], './claude-hooks.json')
+        self.assertNotIn('hooks', json.loads((HOOKS.parent / '.codex-plugin/plugin.json').read_text()))
 
 
 if __name__ == '__main__':

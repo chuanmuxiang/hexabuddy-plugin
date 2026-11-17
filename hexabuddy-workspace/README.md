@@ -20,7 +20,7 @@ plus **Translate → Buddy** for any selected word on your Mac.
   │ (prompt·reply·project)      │   │ → session             │   │ Buddy: session badge    │
   ├─────────────────────────────┤   ├───────────────────────┤   ├─────────────────────────┤
   │ ② ASK AND WAIT (agent MCP)  │   │                       │   │                         │
-  │ ask_human("delete?") ───────┼──▶│ /ask holds ≤ 50 s ────┼──▶│ Phone: question card    │
+  │ ask_human("delete?") ───────┼──▶│ /ask holds ≤ 25 s ────┼──▶│ Phone: question card    │
   │ agent blocks,               │   │                       │   │                         │
   │ get_human_answer…           │   │                       │   │                         │
   │ agent continues ◀───────────┼───┤ answer ◀──────────────┼───┤ tap Yes/No → Send       │
