@@ -308,7 +308,7 @@ class CommandTests(unittest.TestCase):
             config = tomllib.loads((self.codex / 'config.toml').read_text())
             self.assertEqual(list(config['hooks']['state']), [f'{self.codex}/hooks.json:stop:0:0'])
             self.assertEqual(config['mcp_servers'], {'other': {'url': 'https://o'}})
-        self.assertTrue(list(self.codex.glob('config.toml.bak.*')))
+        self.assertEqual([p for p in self.codex.glob('*.bak.*') if 'hexabuddy' in p.read_text().lower()], [], 'its backups go too')
         cache = json.loads((self.codex / '.codex-global-state.json').read_text())
         self.assertEqual(cache, {'mcp-server-tools-cache-v2': [{'server': 'other', 'tools': []}],
                                  'mcp-extension-sidebar-catalog': [{'name': 'docs'}], 'unrelated': 1})
@@ -344,19 +344,57 @@ class CommandTests(unittest.TestCase):
         self.assertIn('✗ Server: server unreachable', output)
         self.assertIn('Devices → this Mac → Disconnect this Mac', output)
 
-    def test_running_codex_app_keeps_its_cache_until_rerun(self):
+    def test_uninstall_stops_first_while_the_codex_app_runs(self):
+        # BUG-034: with the Codex app (inside ChatGPT) running, uninstall stops BEFORE removing anything, so the
+        # command still exists for the rerun; after quitting, the rerun removes everything including the app cache.
         self.connect_and_trust()
         cache = self.codex / '.codex-global-state.json'
         cache.write_text(json.dumps({'mcp-server-tools-cache-v2': [{'server': 'hexabuddy-buddy'}]}))
         self.mac.codex_app = True
-        code, output = self.run_command('disconnect')
+        self.mac.server_calls.clear()
+        code, output = self.run_command('uninstall')
         self.assertEqual(code, 1)
-        self.assertIn('hexabuddy-buddy', cache.read_text())
-        self.assertIn('Quit ChatGPT, then run disconnect again', output)
+        self.assertIn('Quit ChatGPT, then run uninstall', output)
+        self.assertNotIn('disconnect again', output)
+        self.assertEqual(self.mac.server_calls, [], 'nothing revoked yet')
+        self.assertEqual(self.mac.keychain, {SERVER: KEY}, 'nothing removed yet')
+        self.assertEqual(len(self.our_hooks()), 6)
+        self.assertTrue(self.state_home.exists())
         self.mac.codex_app = False
-        code, output = self.run_command('disconnect')
+        code, output = self.run_command('uninstall')
         self.assertEqual(code, 0)
         self.assertNotIn('hexabuddy-buddy', cache.read_text())
+        self.assertEqual(self.mac.keychain, {})
+
+    def test_uninstall_leaves_nothing_of_the_plugin(self):
+        # design/desktop.md "Nothing left": the config backups connect made and Claude's plugin cache go too.
+        self.connect_and_trust()
+        (self.codex / 'config.toml.bak.20261117-000000-000000').write_text('[mcp_servers.hexabuddy-buddy]\nurl = "x"\n')
+        mine = self.codex / 'hooks.json.bak.mine'; mine.write_text('{"user": "own backup without our name"}')
+        cache = self.home / '.claude/plugins/cache/hexabuddy-plugin/hexabuddy-workspace/0.1.10'
+        cache.mkdir(parents=True); (cache / 'x').write_text('x')
+        code, output = self.run_command('uninstall')
+        self.assertEqual(code, 0, output)
+        left = [p.name for p in self.codex.iterdir() if '.bak.' in p.name and 'hexabuddy' in p.read_text().lower()]
+        self.assertEqual(left, [], 'backups naming the plugin are removed')
+        self.assertTrue(mine.exists(), 'a backup that does not name the plugin is kept')
+        self.assertFalse((self.home / '.claude/plugins/cache/hexabuddy-plugin').exists())
+        self.assertFalse(self.state_home.exists())
+        self.assertFalse((self.home / 'Library/Services/Translate to Buddy.workflow').exists())
+
+    def test_connect_revokes_the_pairing_when_the_key_cannot_be_saved(self):
+        # BUG-033: pairing succeeded but the Keychain refused the key → revoke the new key, leave nothing on the phone.
+        def refuse(server, value=None, *, delete=False):
+            if value is not None:
+                raise RuntimeError('Could not save desktop key in Keychain')
+            return self.mac.keychain_call(server, value, delete=delete)
+        with patch.object(self.mac, 'keychain_call', side_effect=refuse), self.assertRaises(setup.SetupError) as failed:
+            self.run_command('connect')
+        message = str(failed.exception)
+        self.assertIn('Could not save desktop key in Keychain', message)
+        self.assertIn(('/desktop/revoke-self', KEY), self.mac.server_calls, 'the new pairing is revoked')
+        self.assertIn('pairing was revoked', message)
+        self.assertNotIn(KEY, message)
 
     def test_status_names_a_missing_keychain_key(self):
         self.state_home.mkdir(parents=True)

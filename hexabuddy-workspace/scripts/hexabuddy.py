@@ -353,7 +353,10 @@ def obtain_key(args, server, ca_cert, state):
     try:
         _credentials.keychain(server, api_key)
     except RuntimeError as error:
-        raise SetupError(str(error)) from None
+        # BUG-033: the phone approved a pairing this Mac cannot keep; revoke it so the phone lists nothing new.
+        revoked, _ = revoke_self(server, api_key, ca_cert)
+        raise SetupError(f'{error}. ' + ('The new pairing was revoked on the server; run connect again.' if revoked
+                         else 'Remove the new Mac on the phone: Devices → this Mac → Disconnect this Mac.')) from None
     return api_key, desktop_id
 
 
@@ -680,6 +683,37 @@ def without_mcp_entries(value):
     return value
 
 
+def codex_cache_blocked():
+    # The Codex app cache names hexabuddy-buddy and the app is running (it would rewrite the file): uninstall must wait.
+    path = codex_home() / '.codex-global-state.json'
+    return path.exists() and MCP_NAME in path.read_text() and codex_app_running()
+
+
+BACKUP_NAME = re.compile(r'.+\.bak\.\d{8}-\d{6}-\d{6}$')   # backup()'s own names
+PLUGIN_MARKERS = (MCP_NAME, 'HEXABUDDY_AGENT', 'hexabuddy-workspace')
+
+
+def remove_leftovers():
+    # "Nothing left" (design/desktop.md): the config backups this plugin made that still name it, and Claude Code's
+    # download cache of the plugin (claude plugin uninstall keeps it). Other backups and files are never touched.
+    removed = 0
+    for folder in (codex_home(), claude_settings_path().parent, Path.home()):
+        if not folder.is_dir():
+            continue
+        for path in folder.iterdir():
+            if path.is_file() and BACKUP_NAME.fullmatch(path.name):
+                try:
+                    text = path.read_text(errors='ignore')
+                except OSError:
+                    continue
+                if any(marker in text for marker in PLUGIN_MARKERS):
+                    path.unlink(); removed += 1
+    cache = claude_settings_path().parent / 'plugins/cache/hexabuddy-plugin'
+    if cache.is_dir():
+        shutil.rmtree(cache, ignore_errors=True)
+    print(f'✓ Leftovers removed: {removed} config backup(s), Claude Code plugin cache.')
+
+
 def clear_codex_app_cache():
     # Remove hexabuddy-buddy from the Codex app's cached state. False when the app runs (it would rewrite the file).
     path = codex_home() / '.codex-global-state.json'
@@ -880,6 +914,10 @@ def calling_agent():
 
 def disconnect(args):
     # Revoke this Mac on the server, then remove every piece: agent entries, CA trust, Quick Action, Keychain key, folder.
+    if codex_cache_blocked():
+        # BUG-034: stop before removing anything, so the command still exists for the rerun.
+        print('! The Codex app (inside ChatGPT) is running and keeps hexabuddy-buddy cached. Quit ChatGPT, then run uninstall.')
+        return 1
     state = _config.state()
     server = state.get('server', '')
     api_key = stored_key(server, state)
@@ -895,8 +933,9 @@ def disconnect(args):
     remove_ca_trust(state)
     remove_quick_action()
     forget_local(server or _config.bundled(PLUGIN).get('server', ''))
+    remove_leftovers()
     if not cache_cleared:
-        print('! The Codex app (inside ChatGPT) is running and keeps hexabuddy-buddy cached. Quit ChatGPT, then run disconnect again.')
+        print('! The Codex app started during uninstall and keeps hexabuddy-buddy cached; it goes when Codex rescans its MCP servers.')
     if revoked:
         print('This Mac is disconnected.')
     else:
