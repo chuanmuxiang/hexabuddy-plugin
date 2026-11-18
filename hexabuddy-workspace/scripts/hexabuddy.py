@@ -952,20 +952,41 @@ def disconnect(args):
 
 
 def sync(args):
-    # Local switch (privacy): off → every hook stops on this Mac before any network call (hooks/config.py), so no session status,
-    # prompt or reply leaves the Mac. Questions (MCP) and Translate → Buddy are not affected. Saved in state.json.
-    if args.state not in ('on', 'off'):
-        print(f'Sync to phone: {"off" if _config.state().get("sync") is False else "on"}')
-        return 0
+    # Local switch (privacy). Off: every hook stops on this Mac before any network call (hooks/config.py), so no session
+    # status, prompt or reply leaves the Mac; the server is told too, so agents on this Mac get no question tools and
+    # ask in the terminal instead (it never sees their questions). Translate → Buddy still works when you use it.
+    # Saved in state.json; the server keeps one flag per Mac (POST /desktop/sync).
     state = _config.state()
-    if args.state == 'off':
-        state['sync'] = False
-    else:
+    if args.state not in ('on', 'off'):
+        print(f'Sync to phone: {"off" if state.get("sync") is False else "on"}')
+        return 0
+    on = args.state == 'on'
+    if on:
         state.pop('sync', None)
+    else:
+        state['sync'] = False
     save_settings(state_path(), state, keep_backup=False)
-    print('✓ Sync to phone: ' + ('off — nothing leaves this Mac; questions and Translate → Buddy still work.'
-                                        if args.state == 'off' else 'on — session status goes to your phone.'))
-    return 0
+    told, note = tell_server_sync(state, on)
+    print('✓ Sync to phone: ' + ('on — session status and agent questions go to your phone.' if on else
+          'off — nothing leaves this Mac: no session status, and agents ask in the terminal instead of on the phone.'))
+    if not told:
+        print(f'! The server was not told ({note}): agents may still offer phone questions until `sync {args.state}` is run again.')
+    return 0 if told else 1
+
+
+def tell_server_sync(state, on):
+    # POST /desktop/sync {on} with this Mac's own desktop key → (ok, message); never raises.
+    server = state.get('server', '')
+    api_key = stored_key(server, state) if server else None
+    if not api_key:
+        return False, 'no desktop key on this Mac'
+    try:
+        post_json(server, '/desktop/sync', {'on': on}, str(home_ca()) if home_ca().is_file() else None, api_key)
+        return True, ''
+    except HTTPError as error:
+        return False, 'key revoked or expired' if error.code == 401 else f'HTTP {error.code}'
+    except (URLError, TimeoutError, OSError, ValueError, SetupError):
+        return False, 'server unreachable over a trusted connection'
 
 
 def status(args):
@@ -979,7 +1000,7 @@ def status(args):
         print(('✓ ' if ok else '✗ ') + text)
     report(bool(server), f'Server: {server or "not set"}')
     report_key(server, state, report)
-    print('  Sync to phone: ' + ('off — nothing leaves this Mac' if state.get('sync') is False else 'on'))
+    print('  Sync to phone: ' + ('off — nothing leaves this Mac; agents ask in the terminal' if state.get('sync') is False else 'on'))
     for agent in found_agents():
         report_agent(agent, report)
     installed = quick_action_path().exists()

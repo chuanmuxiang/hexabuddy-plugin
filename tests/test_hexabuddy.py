@@ -272,6 +272,8 @@ class CommandTests(unittest.TestCase):
         code, output = self.run_command('sync', 'off')
         self.assertEqual(code, 0)
         self.assertIs(self.state()['sync'], False)
+        self.assertIn(('/desktop/sync', KEY), self.mac.server_calls, 'the server is told, so agents here get no phone questions')
+        self.assertIn('agents ask in the terminal', output)
         self.assertIn('Sync to phone: off', self.run_command('status')[1])
         with patch.object(setup, 'calling_agent', return_value='claude'):
             self.run_command('connect')
@@ -279,6 +281,13 @@ class CommandTests(unittest.TestCase):
         self.run_command('sync', 'on')
         self.assertNotIn('sync', self.state())
         self.assertIn('Sync to phone: on', self.run_command('status')[1])
+        # Server unreachable: the local switch still applies to the hooks, and the user is told the server was not.
+        from urllib.error import URLError
+        self.mac.revoke_reply = URLError('down')
+        code, output = self.run_command('sync', 'off')
+        self.assertEqual(code, 1)
+        self.assertIs(self.state()['sync'], False)
+        self.assertIn('The server was not told', output)
 
     def test_connect_drops_trust_records_of_plugin_hooks(self):
         # BUG-037: records of hooks Codex once loaded from the plugin's own hooks file go; other records stay.

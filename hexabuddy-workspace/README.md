@@ -128,7 +128,7 @@ Hexabuddy status
 
 ### Sync to phone (off / on)
 
-For privacy: off keeps your prompts and the agent's replies on your Mac; on shows your sessions on the phone.
+For privacy: off keeps your prompts, the agent's replies and its questions on your Mac (agents ask in the terminal); on shows your sessions on the phone.
 
 
 **Claude Code**
